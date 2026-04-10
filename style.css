@@ -1,0 +1,190 @@
+:root {
+    --bg-color: #343434;
+    --card-bg: #1a1a1a;
+    --accent-color: #ffffff;
+    --text-dim: #cacaca;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--accent-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    text-align: center;
+    max-width: 900px;
+    width: 100%;
+}
+
+header {
+    margin-bottom: 50px;
+}
+
+.preview-area {
+    display: flex;
+    gap: 60px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 50px;
+    margin-top: 50px;
+}
+
+/* The Card Vibe - Smaller & Photo Ready */
+.quote-card {
+    background: var(--card-bg);
+    background-size: cover;
+    background-position: center;
+    width: 250px;  /* Smaller size */
+    height: 300px; /* Compact height */
+    border-radius: 15px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    /*border: 1px solid rgba(255, 255, 255, 0.1);*/
+    box-shadow: 0 15px 35px rgba(0,0,0,0.7);
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+/* Dark overlay so text stays readable over photos */
+.quote-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4); 
+    z-index: 1;
+}
+
+/* Keep content above the dark overlay */
+.card-date, .quote-text, .author-badge {
+    position: relative;
+    z-index: 2;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+}
+
+/* Tilt Logic */
+#card1 {
+    transform: rotate(-10deg);
+    margin-right: -15px;
+}
+
+#card2 {
+    transform: rotate(10deg);
+    margin-top: 30px;
+}
+
+/* Straighten on hover */
+.quote-card:hover {
+    transform: rotate(0deg) scale(1.05);
+    z-index: 10;
+}
+
+.card-date {
+    position: absolute;
+    top: 30px;
+    left: 30px;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.quote-text {
+    font-size: 1.3rem;
+    line-height: 1.4;
+    font-weight: 500;
+    font-style: italic;
+    text-align: center;
+}
+
+.author-badge {
+    position: absolute;
+    bottom: 40px;
+    right: 30px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--text-dim);
+}
+
+/* Buttons */
+.controls button {
+    background: white;
+    color: black;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    margin: 10px;
+    transition: transform 0.2s ease;
+}
+
+.controls button:hover {
+    transform: scale(1.05);
+}
+
+#download-btn {
+    background: transparent;
+    border: 1px solid white;
+    color: white;
+}
+.download-group {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.save-btn {
+    background: transparent !important;
+    border: 1px solid white !important;
+    color: white !important;
+    font-size: 0.7rem !important;
+}
+
+.save-btn:hover {
+    background: white !important;
+    color: black !important;
+}
+#dynamic-greeting {
+    display: inline-block;
+    padding: 12px 25px;
+    margin-top: 20px;
+    background: rgba(128, 115, 249, 0.151); /* Very transparent white */
+    backdrop-filter: blur(20px); /* The magic glass blur */
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 50px; /* Pill shape */
+    border: 1px solid rgba(253, 247, 247, 0.365); /* Subtle edge highlight */
+    color: var(--accent-color);
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    box-shadow: 0 8px 32px 0 rgba(99, 99, 99, 0.37); /* Depth shadow */
+    
+    /* Position it so it feels like it's "popping out" */
+    position: relative;
+    left: -1%; /* Slight shift to the left margin to break the symmetry */
+    transition: all 0.3s ease;
+}
+
+#dynamic-greeting:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(10px); /* Subtle slide when you hover */
+}

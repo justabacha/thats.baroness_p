@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signature Loops | Phesty & Baroness</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <header style ="text-align: left;">
+            <h1>Signature Loop Generator</h1>
+            <p id="dynamic-greeting">Loading the vibe...</p>
+        </header>
+
+        <div class="preview-area">
+            <div class="quote-card" id="card1">
+                <div class="card-date" id="date1">April, Thursday 9th</div>
+                <div class="quote-text" id="text1">"I tell everyone we’re just friends..."</div>
+                <div class="author-badge">!!Baroness</div>
+            </div>
+
+            <div class="quote-card" id="card2">
+                <div class="card-date" id="date2">April, Thursday 9th</div>
+                <div class="quote-text" id="text2">"...I don't look at my friends like this."</div>
+                <div class="author-badge">!!Phesty</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="randomize-btn">New Vibe 🎲</button>
+            <div class="download-group">
+                <button class="save-btn" onclick="downloadCard('card1', 'Baroness-Vibe')">Save Baroness's Card 📥</button>
+                <button class="save-btn" onclick="downloadCard('card2', 'Phesty-Vibe')">Save Phesty's Card 📥</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="quotes.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
