@@ -8,11 +8,51 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
+     <div id="lockscreen">
+        <div class="lock-box">
+            <h2>Phesty Signature Vault 🔐</h2>
+            <p>Who is entering the vibe?</p>
+            
+            <input type="text" id="user-name" placeholder="jina please..." autocomplete="off">
+            
+           <p>Enter secret code:</p>
+            <div class="pass-wrapper">
+                <input type="password" id="passcode-input" placeholder="••••" autocomplete="off">
+                <span id="toggle-pass" onclick="togglePeek()">👁️</span>
+            </div>
 
+            <button onclick="checkPasscode()">Unlock</button>
+            <p id="lock-msg"></p>
+        </div>
+    </div>
     <div class="container">
-        <header style ="text-align: left;">
-            <h1>Signature Loop Generator</h1>
-            <p id="dynamic-greeting">Loading the vibe...</p>
+       <header class="dashboard-header">
+            <div class="user-greeting-box">
+                <h2 id="welcome-text">Hi User, Welcome</h2>
+                <p id="dynamic-greeting">Loading the vibe...</p>
+            </div>
+            
+            <div class="command-box">
+                <div id="local-time">14:00Hrs</div>
+
+                <div class="weather-circles-container">
+                    <div class="glass-bubble temp-bubble">
+                        <span class="icon">🌡️</span>
+                        <div class="bubble-content">
+                            <span id="temp">27°C</span>
+                            <span id="condition">Vibing...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-bubble humid-bubble">
+                        <span class="icon">🫧</span>
+                        <div class="bubble-content">
+                            <span id="humidity">34%</span>
+                            <span class="label">Humidity</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </header>
 
         <div class="preview-area">
@@ -30,7 +70,6 @@
         </div>
 
         <div class="controls">
-            <button id="randomize-btn">New Vibe 🎲</button>
             <div class="download-group">
                 <button class="save-btn" onclick="downloadCard('card1', 'Baroness-Vibe')">Save Baroness's Card 📥</button>
                 <button class="save-btn" onclick="downloadCard('card2', 'Phesty-Vibe')">Save Phesty's Card 📥</button>
