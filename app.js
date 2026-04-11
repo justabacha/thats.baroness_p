@@ -186,35 +186,57 @@ function updateDate() {
 }
 
 function generateVibe() {
-    // a. The Setup
+    // 1. Setup & Date Logic
     const launchDate = new Date(2026, 3, 11); // April 11, 2026
     const today = new Date();
-    const MASTER_SEED = 2026; // Our secret key for the shuffle
+    const MASTER_SEED = 2026;
 
-    // b. Calculate Days Since Launch
     const timeDiff = today.getTime() - launchDate.getTime();
     const daysSinceLaunch = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
 
-    // c. Create a shuffled copy of array based on the MASTER_SEED
-    // ---This ensures the "Random" order is identical on every browser---
+    // 2. Deterministic Shuffle (Ensures same vibe for everyone today)
     const shuffledLoops = [...signatureLoops];
     let seed = MASTER_SEED;
     
     for (let i = shuffledLoops.length - 1; i > 0; i--) {
-        seed = (seed * 9301 + 49297) % 233280; // A simple math "randomizer"
+        seed = (seed * 9301 + 49297) % 233280;
         const j = Math.floor((seed / 233280) * (i + 1));
         [shuffledLoops[i], shuffledLoops[j]] = [shuffledLoops[j], shuffledLoops[i]];
     }
 
-    // d. Pick the card for today from the scrambled list
+    // 3. Pick Today's Vibe
     const index = daysSinceLaunch % shuffledLoops.length;
     const vibe = shuffledLoops[index];
 
-    // e. Update the UI
+    // 4. Update Text Content
     document.getElementById('text1').innerText = `"${vibe.part1}"`;
     document.getElementById('text2').innerText = `"${vibe.part2}"`;
-    document.getElementById('card1').style.backgroundImage = `url('${vibe.photo1}')`;
-    document.getElementById('card2').style.backgroundImage = `url('${vibe.photo2}')`;
+
+    // 5. Smart Image Loader (The Case-Sensitivity Fix)
+    const loadSafeImage = (elementId, imagePath) => {
+        const el = document.getElementById(elementId);
+        const img = new Image();
+        
+        img.src = imagePath;
+        
+        img.onload = () => {
+            el.style.backgroundImage = `url("${imagePath}")`;
+        };
+
+        img.onerror = () => {
+            // Swap extension if first attempt fails
+            let altPath = imagePath.endsWith('.jpg') 
+                ? imagePath.replace('.jpg', '.JPG') 
+                : imagePath.replace('.JPG', '.jpg');
+            
+            console.log(`Fallback trigger: Trying ${altPath}`);
+            el.style.backgroundImage = `url("${altPath}")`;
+        };
+    };
+
+    // Fire the loaders
+    loadSafeImage('card1', vibe.photo1);
+    loadSafeImage('card2', vibe.photo2);
 }
 
 function downloadCard(cardId, fileName) {
