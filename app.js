@@ -65,20 +65,49 @@ window[_$_3619[33]]= function()
 	
 }
 
+// Wake up the voice engine
+window.speechSynthesis.getVoices();
+if (speechSynthesis.onvoiceschanged !== undefined) {
+    speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+}
 
 // 2. The Greeting Vault (Personalized)
 const greetingBank = {
     morning: {
-        Phesty: ["Hey Phesty, how is your morning starting?", "Rise and shine, Phesty! New vibes ready."],
-        Baroness: ["Morning Baroness, sun is out for you today.", "Hey B, ready for a fresh loop?"]
+        Phesty: [
+            "hope your morning’s starting easy.",
+            "fresh start, fresh energy today.",
+            "let’s make today count, yeah?"
+        ],
+        Baroness: [
+            "hope the morning’s treating you gently.",
+            "new day, same glow.",
+            "take it slow, you’ve got time."
+        ]
     },
     afternoon: {
-        Phesty: ["Good afternoon Phesty! Still winning today?", "Mid-day energy check for the king."],
-        Baroness: ["Lunchtime vibes, Baroness. Hope you're chilling.", "Good afternoon B, keep shining!"]
+        Phesty: [
+            "midday check, still in control?",
+            "hope the day’s moving your way.",
+            "don’t lose that momentum now."
+        ],
+        Baroness: [
+            "hope the day’s been kind so far.",
+            "still shining through the afternoon.",
+            "just a little more to go."
+        ]
     },
     evening: {
-        Phesty: ["Night owl energy, Phesty! 🦉", "Evening mate, time to wind down the day."],
-        Baroness: ["The stars are out for you, Baroness.", "Evening B, reflecting on a day well spent..."]
+        Phesty: [
+            "time to ease into the night.",
+            "you made it through, take it in.",
+            "slow it down, you’ve done enough."
+        ],
+        Baroness: [
+            "the evening’s calm, just like you.",
+            "time to relax, you’ve earned it.",
+            "let the day fade easy."
+        ]
     }
 };
 
@@ -170,11 +199,69 @@ async function updateWeatherLogic(lat, lon, forcedCity = null) {
         
         // Label clean up
         document.getElementById('condition').innerText = "Temperature";
+        
+        setTimeout(() => {
+            announceVibe();
+        }, 1500);
 
     } catch (err) {
         console.error("Logic Error:", err);
         dailySuggestion = "Vibing Locally";
     }
+}
+
+function announceVibe() {
+    window.speechSynthesis.cancel();
+    let voices = window.speechSynthesis.getVoices();
+    if (voices.length === 0) {
+        window.speechSynthesis.onvoiceschanged = () => announceVibe();
+        return;
+    }
+
+    const welcome = document.getElementById('welcome-text')?.innerText || "";
+    const greeting = document.getElementById('dynamic-greeting')?.innerText || "";
+    
+    // 1. SMART CLOCK: "Eleven o'clock PM" or "Eleven thirty PM"
+    const now = new Date();
+    let hours = now.getHours();
+    const minutes = now.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12; 
+    
+    // If minutes is 0, say "o'clock", otherwise just say the number
+    const minutesStr = minutes === 0 ? "o'clock" : minutes;
+    const timeForVoice = `${hours} ${minutesStr} ${ampm}`;
+
+    // 2. CLEAN TEXT: Grab the suggestion and strip emojis
+    const rawStatus = document.getElementById('local-time')?.innerText || "";
+    const cleanStatus = rawStatus.split('||')[1]?.trim() || "enjoy the vibe";
+    
+    // 3. THE "STREET-SMART" MESSAGE: Added your "Just so you know" placement
+    const fullMessage = `${welcome}. ${greeting}. It is ${timeForVoice}. Just so you know, ${cleanStatus}`;
+    
+    // Kill all emojis
+    const noEmojiMessage = fullMessage.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
+
+    const utterance = new SpeechSynthesisUtterance(noEmojiMessage);
+
+    // 4. VOICE SELECTION (Priority)
+    const preferredVoices = ["Google UK English Male", "Microsoft Ryan", "Microsoft Christopher", "Google US English", "Microsoft David"];
+    let perfectVoice = null;
+    for (let name of preferredVoices) {
+        perfectVoice = voices.find(v => v.name.includes(name));
+        if (perfectVoice) break;
+    }
+
+    if (perfectVoice) {
+        utterance.voice = perfectVoice;
+        utterance.lang = perfectVoice.lang;
+    }
+
+    // 5. DELIVERY: Natural teenager pace
+    utterance.rate = 1.1; 
+    utterance.pitch = 1.0;
+    
+    window.speechSynthesis.speak(utterance);
 }
 
 // 3. Core Engine (Date, Vibe, Download)
@@ -209,8 +296,8 @@ function generateVibe() {
     const vibe = shuffledLoops[index];
 
     // 4. Update Text Content
-    document.getElementById('text1').innerText = `"${vibe.part1}"`;
-    document.getElementById('text2').innerText = `"${vibe.part2}"`;
+    document.getElementById('text1').innerText = `${vibe.part1}`;
+    document.getElementById('text2').innerText = `${vibe.part2}`;
 
     // 5. Smart Image Loader (The Case-Sensitivity Fix)
     const loadSafeImage = (elementId, imagePath) => {
