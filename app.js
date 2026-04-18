@@ -242,7 +242,7 @@ async function announceVibe() {
     
     // 3. THE "NATURAL" MESSAGE STRUCTURE
     // We use full stops (.) and "..." to tell ElevenLabs where to breathe.
-    const fullMessage = `${welcome}. ${greeting}. Quick update... it’s ${dayName}, ${dateStr}. The time is ${timeForVoice}. Just so you know... ${cleanStatus}.`;
+    const fullMessage = `${welcome}. ${greeting}. Quick update it’s ${dayName}, ${dateStr}, The time is ${timeForVoice}. Just so you know... ${cleanStatus}.`;
     
     // Clean emojis but keep the punctuation for pacing
     const cleanText = fullMessage.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
