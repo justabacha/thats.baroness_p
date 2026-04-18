@@ -252,7 +252,8 @@ async function announceVibe() {
         const voices = window.speechSynthesis.getVoices();
         const fallbackVoice = voices.find(v => v.name.includes("Male") && v.lang.startsWith("en"));
         if (fallbackVoice) utterance.voice = fallbackVoice;
-        utterance.rate = 1.1;
+        utterance.rate = 1.0; // Pure, natural speed
+        utterance.pitch = 1.0;
         window.speechSynthesis.speak(utterance);
     }
 }
