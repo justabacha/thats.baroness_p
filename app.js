@@ -234,7 +234,7 @@ async function announceVibe() {
     const cleanStatus = rawStatus.split('||')[1]?.trim() || "enjoy the vibe";
     
     // 2. NATURAL FLOW: Using "..." for breathing pauses
-    const fullMessage = `${welcome}... ${greeting}... It is ${timeForVoice}... Just so you know... ${cleanStatus}`;
+    const fullMessage = `${welcome}... ${greeting}... It is ${timeForVoice}... Just so you know ${cleanStatus}`;
     
     // Kill emojis but KEEP the "..." dots so the AI knows to pause
     const cleanText = fullMessage.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');

@@ -18,15 +18,12 @@ export default async function handler(req, res) {
             method: 'POST',
             headers: { 
                 'xi-api-key': key, 
-                'Content-Type': 'application/json' 
+                'Content-Type': 'application/json',
+                'Accept': 'audio/mpeg'
             },
            body: JSON.stringify({ 
             text: text, 
-            model_id: "eleven_flash_v2_5", // This is the new, fast, free-tier friendly model
-            voice_settings: { 
-                stability: 0.5, 
-                similarity_boost: 0.5 
-            }
+            model_id: "eleven_flash_v2_5"// This is the new, fast, free-tier friendly model
         })
         });
 
