@@ -211,10 +211,9 @@ async function updateWeatherLogic(lat, lon, forcedCity = null) {
 }
 
 async function announceVibe() {
-    // 1. DYNAMIC DATE & TIME (The "Radio Broadcaster" Logic)
+    // 1. DYNAMIC DATE & TIME
     const now = new Date();
     
-    // Get "Saturday" and "18 April"
     const dayName = now.toLocaleDateString('en-GB', { weekday: 'long' });
     const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
 
@@ -223,7 +222,7 @@ async function announceVibe() {
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12 || 12; 
 
-    // The "Five Oh Six" logic
+    // Natural minute pronunciation
     let minutesStr = "";
     if (minutes === 0) {
         minutesStr = "o'clock";
@@ -232,22 +231,31 @@ async function announceVibe() {
     } else {
         minutesStr = minutes;
     }
-    const timeForVoice = `${hours} ${minutesStr} ${ampm}`;
+
+    // More human time phrasing
+    const period = ampm === 'AM' ? 'morning' : 'evening';
+    const timeForVoice = `${hours} ${minutesStr} in the ${period}`;
 
     // 2. DATA SCRAPING
     const welcome = document.getElementById('welcome-text')?.innerText || "Hi Baroness";
     const greeting = document.getElementById('dynamic-greeting')?.innerText || "Welcome back";
     const rawStatus = document.getElementById('local-time')?.innerText || "";
     const cleanStatus = rawStatus.split('||')[1]?.trim() || "stay in your zone";
-    
-    // 3. THE "NATURAL" MESSAGE STRUCTURE
-    // We use full stops (.) and "..." to tell ElevenLabs where to breathe.
-    const fullMessage = `${welcome}. ${greeting}. Quick update it’s ${dayName}, ${dateStr}, The time is ${timeForVoice}. Just so you know... ${cleanStatus}.`;
-    
-    // Clean emojis but keep the punctuation for pacing
+
+    // 3. NATURAL MESSAGE STRUCTURE (no awkward pauses, smooth flow)
+    const introVariants = [
+        "Quick update,",
+        "Here’s where we are,",
+        "Right now,"
+    ];
+    const intro = introVariants[Math.floor(Math.random() * introVariants.length)];
+
+    const fullMessage = `${welcome}. ${greeting}. ${intro} it’s ${dayName}, ${dateStr}. The time is ${timeForVoice}. Just so you know, ${cleanStatus}.`;
+
+    // Clean emojis (keep punctuation for natural speech)
     const cleanText = fullMessage.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
 
-    // 4. THE SECURE BRIDGE CALL
+    // 4. ELEVENLABS CALL
     try {
         const response = await fetch('/api/speak', {
             method: 'POST',
@@ -259,19 +267,23 @@ async function announceVibe() {
         const audioBlob = await response.blob();
         const audioUrl = URL.createObjectURL(audioBlob);
         const audio = new Audio(audioUrl);
-        
+
         audio.play();
-        console.log("Vibe Announced: Natural Update Flow 🦾");
+        console.log("Vibe Announced: Smooth Human Flow 🦾");
 
     } catch (error) {
         console.error("AI Bridge failed, falling back to local...", error);
         
-        // 5. EMERGENCY FALLBACK
-        const utterance = new SpeechSynthesisUtterance(cleanText.replace(/\.\.\./g, ','));
+        // 5. FALLBACK (clean punctuation, no weird pauses)
+        const utterance = new SpeechSynthesisUtterance(cleanText);
         const voices = window.speechSynthesis.getVoices();
-        const fallbackVoice = voices.find(v => v.name.includes("Male") && v.lang.startsWith("en"));
+        const fallbackVoice = voices.find(v => 
+            v.name.toLowerCase().includes("male") && v.lang.startsWith("en")
+        );
+
         if (fallbackVoice) utterance.voice = fallbackVoice;
         utterance.rate = 1.0;
+
         window.speechSynthesis.speak(utterance);
     }
 }
