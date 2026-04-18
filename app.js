@@ -210,58 +210,51 @@ async function updateWeatherLogic(lat, lon, forcedCity = null) {
     }
 }
 
-function announceVibe() {
-    window.speechSynthesis.cancel();
-    let voices = window.speechSynthesis.getVoices();
-    if (voices.length === 0) {
-        window.speechSynthesis.onvoiceschanged = () => announceVibe();
-        return;
-    }
-
+async function announceVibe() {
+    // 1. DATA PREP (Your exact logic)
     const welcome = document.getElementById('welcome-text')?.innerText || "";
     const greeting = document.getElementById('dynamic-greeting')?.innerText || "";
-    
-    // 1. SMART CLOCK: "Eleven o'clock PM" or "Eleven thirty PM"
     const now = new Date();
     let hours = now.getHours();
     const minutes = now.getMinutes();
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12 || 12; 
-    
-    // If minutes is 0, say "o'clock", otherwise just say the number
     const minutesStr = minutes === 0 ? "o'clock" : minutes;
     const timeForVoice = `${hours} ${minutesStr} ${ampm}`;
-
-    // 2. CLEAN TEXT: Grab the suggestion and strip emojis
     const rawStatus = document.getElementById('local-time')?.innerText || "";
     const cleanStatus = rawStatus.split('||')[1]?.trim() || "enjoy the vibe";
     
-    // 3. THE "STREET-SMART" MESSAGE: Added your "Just so you know" placement
-    const fullMessage = `${welcome}. ${greeting}. It is ${timeForVoice}. Just so you know, ${cleanStatus}`;
-    
-    // Kill all emojis
-    const noEmojiMessage = fullMessage.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
+    // Smooth flow message
+    const fullMessage = `${welcome} ${greeting} It is ${timeForVoice} Just so you know ${cleanStatus}`;
+    const cleanText = fullMessage.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').replace(/[.,!]/g, ' ');
 
-    const utterance = new SpeechSynthesisUtterance(noEmojiMessage);
+    // 2. CLEVER BRIDGE CALL
+    try {
+        const response = await fetch('/api/speak', {
+            method: 'POST',
+            body: JSON.stringify({ text: cleanText })
+        });
 
-    // 4. VOICE SELECTION (Priority)
-    const preferredVoices = ["Google UK English Male", "Microsoft Ryan", "Microsoft Christopher", "Google US English", "Microsoft David"];
-    let perfectVoice = null;
-    for (let name of preferredVoices) {
-        perfectVoice = voices.find(v => v.name.includes(name));
-        if (perfectVoice) break;
+        if (!response.ok) throw new Error("API Bridge failed");
+
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        
+        audio.play();
+        console.log("Vibe Announced via Secure AI Tunnel 🦾");
+
+    } catch (error) {
+        console.error("AI Bridge failed, falling back to local voice...", error);
+        
+        // 3. EMERGENCY FALLBACK (Local browser voice)
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        const voices = window.speechSynthesis.getVoices();
+        const fallbackVoice = voices.find(v => v.name.includes("Male") && v.lang.startsWith("en"));
+        if (fallbackVoice) utterance.voice = fallbackVoice;
+        utterance.rate = 1.1;
+        window.speechSynthesis.speak(utterance);
     }
-
-    if (perfectVoice) {
-        utterance.voice = perfectVoice;
-        utterance.lang = perfectVoice.lang;
-    }
-
-    // 5. DELIVERY: Natural teenager pace
-    utterance.rate = 1.1; 
-    utterance.pitch = 1.0;
-    
-    window.speechSynthesis.speak(utterance);
 }
 
 // 3. Core Engine (Date, Vibe, Download)
