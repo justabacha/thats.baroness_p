@@ -119,7 +119,7 @@ async function setDynamicGreeting(user) {
 
         // a. Set Welcome Text (MAKE SURE THIS ID EXISTS IN HTML)
         const welcomeEl = document.getElementById('welcome-text');
-        if (welcomeEl) welcomeEl.innerText = `Hi ${user}, Welcome`;
+        if (welcomeEl) welcomeEl.innerText = `Hi ${user}, Welcome.`;
         
         // b. Set Greeting
         const userGreetings = greetingBank[timeOfDay][user];
