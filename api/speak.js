@@ -20,11 +20,14 @@ export default async function handler(req, res) {
                 'xi-api-key': key, 
                 'Content-Type': 'application/json' 
             },
-            body: JSON.stringify({ 
-                text: text, 
-                model_id: "eleven_monolingual_v1",
-                voice_settings: { stability: 0.5, similarity_boost: 0.75 }
-            })
+           body: JSON.stringify({ 
+            text: text, 
+            model_id: "eleven_flash_v2_5", // This is the new, fast, free-tier friendly model
+            voice_settings: { 
+                stability: 0.5, 
+                similarity_boost: 0.75 
+            }
+        })
         });
 
         if (!response.ok) {
