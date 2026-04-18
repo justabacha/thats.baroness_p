@@ -219,16 +219,27 @@ async function announceVibe() {
     const minutes = now.getMinutes();
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12 || 12; 
-    const minutesStr = minutes === 0 ? "o'clock" : minutes;
+   // 1. SMART TIME: Adding the "Oh" for natural minutes (e.g., Five Oh Six)
+    let minutesStr = "";
+    if (minutes === 0) {
+        minutesStr = "o'clock";
+    } else if (minutes < 10) {
+        minutesStr = `oh ${minutes}`;
+    } else {
+        minutesStr = minutes;
+    }
     const timeForVoice = `${hours} ${minutesStr} ${ampm}`;
+
     const rawStatus = document.getElementById('local-time')?.innerText || "";
     const cleanStatus = rawStatus.split('||')[1]?.trim() || "enjoy the vibe";
     
-    // Smooth flow message
-    const fullMessage = `${welcome} ${greeting} It is ${timeForVoice} Just so you know ${cleanStatus}`;
-    const cleanText = fullMessage.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').replace(/[.,!]/g, ' ');
+    // 2. NATURAL FLOW: Using "..." for breathing pauses
+    const fullMessage = `${welcome}... ${greeting}... It is ${timeForVoice}... Just so you know... ${cleanStatus}`;
+    
+    // Kill emojis but KEEP the "..." dots so the AI knows to pause
+    const cleanText = fullMessage.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
 
-    // 2. CLEVER BRIDGE CALL
+    // 3. THE BRIDGE CALL
     try {
         const response = await fetch('/api/speak', {
             method: 'POST',
@@ -242,18 +253,19 @@ async function announceVibe() {
         const audio = new Audio(audioUrl);
         
         audio.play();
-        console.log("Vibe Announced via Secure AI Tunnel 🦾");
+        console.log("Vibe Announced with natural pauses 🦾");
 
     } catch (error) {
-        console.error("AI Bridge failed, falling back to local voice...", error);
+        console.error("AI Bridge failed, falling back...", error);
         
-        // 3. EMERGENCY FALLBACK (Local browser voice)
-        const utterance = new SpeechSynthesisUtterance(cleanText);
+        // 4. FALLBACK (Using commas for pauses in browser voice)
+        const fallbackText = cleanText.replace(/\.\.\./g, ','); 
+        const utterance = new SpeechSynthesisUtterance(fallbackText);
         const voices = window.speechSynthesis.getVoices();
         const fallbackVoice = voices.find(v => v.name.includes("Male") && v.lang.startsWith("en"));
+        
         if (fallbackVoice) utterance.voice = fallbackVoice;
-        utterance.rate = 1.0; // Pure, natural speed
-        utterance.pitch = 1.0;
+        utterance.rate = 1.0;
         window.speechSynthesis.speak(utterance);
     }
 }
