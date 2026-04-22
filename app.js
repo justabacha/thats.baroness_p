@@ -164,7 +164,6 @@ async function fetchWeather() {
 
     navigator.geolocation.getCurrentPosition(success, error);
 }
-
 // 3. The "Clutch" logic that actually pulls the data
 async function updateWeatherLogic(lat, lon, forcedCity = null) {
     try {
@@ -287,6 +286,38 @@ async function announceVibe() {
         window.speechSynthesis.speak(utterance);
     }
 }
+function startVibeParade() {
+    let origin = document.querySelector('.parade-origin');
+    if (!origin) {
+        origin = document.createElement('div');
+        origin.className = 'parade-origin';
+        document.body.appendChild(origin);
+    }
+
+    const emojis = ['❤️', '💖', '✨', '🌸', '💎', '🔥', '👑'];
+    
+    setInterval(() => {
+        const p = document.createElement('span');
+        p.className = 'parade-emoji';
+        p.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
+        
+        // V-SHAPE: Spread target randomized
+        const spreadWidth = (Math.random() - 0.5) * 1000; 
+        p.style.setProperty('--spread', `${spreadWidth}px`);
+        
+        // SLOW PARADE: 8-12 seconds duration
+        const duration = (Math.random() * 4 + 8) + 's';
+        p.style.setProperty('--duration', duration);
+
+        origin.appendChild(p);
+
+        // Clean up memory
+        setTimeout(() => p.remove(), 13000);
+    }, 450); // Steady flow
+}
+
+// Trigger as soon as the vibe is ready
+window.addEventListener('load', startVibeParade);
 
 // 3. Core Engine (Date, Vibe, Download)
 function updateDate() {

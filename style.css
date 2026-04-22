@@ -385,3 +385,43 @@ input {
     font-size: 0.75rem;
     color: #ff4d4d;
 }
+/* The Parade Starting Line */
+.parade-origin {
+    position: fixed;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+    z-index: 10000;
+}
+
+.parade-emoji {
+    position: absolute;
+    bottom: 0;
+    font-size: 15px; /* Starts tiny */
+    user-select: none;
+    pointer-events: none;
+    will-change: transform, opacity;
+    /* Slow, linear movement like a parade */
+    animation: slowParade var(--duration) linear forwards;
+}
+
+@keyframes slowParade {
+    0% {
+        transform: translateY(0) translateX(0) scale(0.5);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1; /* Fade in quickly at the start */
+    }
+    80% {
+        opacity: 0.8; /* Stay visible for most of the trip */
+    }
+    100% {
+        /* Ends wide (V-shape), large, and faded out */
+        transform: translateY(-90vh) translateX(var(--spread)) scale(2.5);
+        opacity: 0;
+    }
+}
