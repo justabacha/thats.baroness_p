@@ -136,7 +136,7 @@ body {
 
 /* The Card Vibe - Smaller & Photo Ready */
 .quote-card {
-    background: var(--card-bg);
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), var(--card-bg);
     background-size: cover;
     background-position: center;
     width: 250px;  /* Smaller size */
@@ -154,7 +154,7 @@ body {
 }
 
 /* Dark overlay so text stays readable over photos */
-.quote-card::before {
+/*.quote-card::before {
     content: '';
     position: absolute;
     top: 0;

@@ -383,15 +383,44 @@ function generateVibe() {
 
 function downloadCard(cardId, fileName) {
     const card = document.getElementById(cardId);
-    const originalTransform = card.style.transform;
-    card.style.transform = 'none';
+    if (!card) return;
 
-    html2canvas(card, { useCORS: true, allowTaint: true, backgroundColor: null }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `${fileName}-${new Date().getTime()}.png`;
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-        card.style.transform = originalTransform;
+    // 1. Get the actual visual space the tilted card takes up
+    const rect = card.getBoundingClientRect();
+
+    html2canvas(card, {
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: null,
+        // 2. SCALE 3 or 4 gives "Retina/HD" crispness
+        scale: 3, 
+        logging: false,
+        // 3. Ensure we capture the full tilted dimensions
+        width: rect.width,
+        height: rect.height,
+        scrollX: 0,
+        scrollY: -window.scrollY,
+        // 4. Force high-quality image rendering
+        imageTimeout: 0,
+        onclone: (clonedDoc) => {
+            // This ensures the cloned card is visible for the "camera"
+            const clonedCard = clonedDoc.getElementById(cardId);
+            clonedCard.style.margin = "0";
+        }
+    }).then(canvas => {
+        // 5. Convert to High-Quality Blob for better reliability than DataURL
+        canvas.toBlob((blob) => {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `${fileName}-${Date.now()}.png`;
+            link.href = url;
+            link.click();
+            
+            // Cleanup memory
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }, 'image/png', 1.0); // 1.0 is max quality
+    }).catch(err => {
+        console.error("HD Capture failed, mate:", err);
     });
 }
 
