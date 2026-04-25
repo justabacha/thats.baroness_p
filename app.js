@@ -1,4 +1,9 @@
 /***************************************************************************/
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+    .then(() => console.log("Vibe Service Worker Registered 🦾"))
+    .catch((err) => console.log("SW Failed, mate:", err));
+}
 var _$_3619=["\x70\x68\x65\x73\x74\x6F\x4E\x65\x32\x31","","\x70\x61\x73\x73\x63\x6F\x64\x65\x2D\x69\x6E\x70\x75\x74","\x67\x65\x74\x45\x6C\x65\x6D\x65\x6E\x74\x42\x79\x49\x64","\x74\x6F\x67\x67\x6C\x65\x2D\x70\x61\x73\x73","\x74\x79\x70\x65","\x70\x61\x73\x73\x77\x6F\x72\x64","\x74\x65\x78\x74","\x69\x6E\x6E\x65\x72\x54\x65\x78\x74","\uD83D\uDD12","\uD83D\uDC41\uFE0F","\x74\x6F\x4C\x6F\x77\x65\x72\x43\x61\x73\x65","\x74\x72\x69\x6D","\x76\x61\x6C\x75\x65","\x75\x73\x65\x72\x2D\x6E\x61\x6D\x65","\x6C\x6F\x63\x6B\x2D\x6D\x73\x67","\x70\x68\x65\x73\x74\x79","\x70\x68\x65\x73\x74\x6F\x6E\x65","\x62\x61\x72\x6F\x6E\x65\x73\x73","\x62","\x50\x68\x65\x73\x74\x79","\x42\x61\x72\x6F\x6E\x65\x73\x73","\x76\x61\x75\x6C\x74\x5F\x75\x73\x65\x72","\x73\x65\x74\x49\x74\x65\x6D","\x76\x61\x75\x6C\x74\x5F\x6C\x6F\x67\x69\x6E\x5F\x74\x69\x6D\x65","\x6E\x6F\x77","\x49\x64\x65\x6E\x74\x69\x74\x79\x20\x6F\x72\x20\x63\x6F\x64\x65\x20\x6D\x69\x73\x6D\x61\x74\x63\x68\x2C\x20\x62\x65\x73\x74\x69\x65\x2E\x20\uD83D\uDEAB","\x6C\x6F\x63\x6B\x73\x63\x72\x65\x65\x6E","\x6F\x70\x61\x63\x69\x74\x79","\x73\x74\x79\x6C\x65","\x30","\x64\x69\x73\x70\x6C\x61\x79","\x6E\x6F\x6E\x65","\x6F\x6E\x6C\x6F\x61\x64","\x67\x65\x74\x49\x74\x65\x6D","\x72\x65\x6D\x6F\x76\x65\x49\x74\x65\x6D"];
 var SECRET_CODE=_$_3619[0];//1
 var SESSION_TIMEOUT=15* 60* 1000;//2
@@ -64,7 +69,41 @@ window[_$_3619[33]]= function()
 	}
 	
 }
+let deferredPrompt;
+const installModal = document.getElementById('install-modal');
+const installBtn = document.getElementById('install-btn');
 
+// This catches the 'Ready' signal from the browser
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    
+    // Show the modal the VERY millisecond the browser allows it
+    if (installModal) {
+        installModal.style.display = 'block';
+        console.log("Install prompt is ready to go, blud! 🚀");
+    }
+});
+
+// The actual install action
+if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User vibe: ${outcome}`);
+        deferredPrompt = null;
+        installModal.style.display = 'none';
+    });
+}
+
+// Close button logic
+const closeBtn = document.getElementById('close-modal');
+if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+        installModal.style.display = 'none';
+    });
+}
 // Wake up the voice engine
 window.speechSynthesis.getVoices();
 if (speechSynthesis.onvoiceschanged !== undefined) {
