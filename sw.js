@@ -1,4 +1,4 @@
-const CACHE_NAME = 'baroness-vibe-v1';
+const CACHE_NAME = 'baroness-vibe-v1.0.1';
 const assets = ['/', '/index.html', '/style.css', '/app.js'];
 
 self.addEventListener('install', (event) => {
