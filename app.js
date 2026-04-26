@@ -1,9 +1,9 @@
 /***************************************************************************/
-if ('serviceWorker' in navigator) {
+/*if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js')
     .then(() => console.log("Vibe Service Worker Registered 🦾"))
     .catch((err) => console.log("SW Failed, mate:", err));
-}
+}*/
 
 // 1. Setup & Persistence Engine
 let userProfile = JSON.parse(localStorage.getItem('vibe_profile')) || null;
@@ -49,7 +49,13 @@ function launchApp() {
     // Initialize the Vibe
     updateDate();
     generateVibe();
-    setDynamicGreeting(userProfile.persona); 
+    // FIXED: Safe persona check
+    if (userProfile && userProfile.persona) {
+        setDynamicGreeting(userProfile.persona); 
+    } else {
+        console.warn("No user profile found, mate. Using default.");
+        setDynamicGreeting('Phesty');
+    }
 }
 
 window.onload = () => {
@@ -150,25 +156,26 @@ async function setDynamicGreeting(user) {
         const hour = new Date().getHours();
         let timeOfDay = (hour >= 5 && hour < 12) ? "morning" : (hour >= 12 && hour < 17) ? "afternoon" : "evening";
 
-        // a. Set Welcome Text (MAKE SURE THIS ID EXISTS IN HTML)
+        // a. Set Welcome Text
        const welcomeEl = document.getElementById('welcome-text');
         if (welcomeEl && userProfile) {
             welcomeEl.innerText = `Hi ${userProfile.displayName}, Welcome back.`;
         }
-        // b. Set Greeting
-        const userGreetings = greetingBank[timeOfDay][user];
+        // b. Set Greeting (FIXED: safe persona fallback)
+        const persona = user || (userProfile ? userProfile.persona : 'Phesty');
+        const userGreetings = greetingBank[timeOfDay][persona] || greetingBank[timeOfDay]['Phesty'];
         const randomGreeting = userGreetings[Math.floor(Math.random() * userGreetings.length)];
-        document.getElementById('dynamic-greeting').innerText = randomGreeting;
+        const greetingEl = document.getElementById('dynamic-greeting');
+        if (greetingEl) greetingEl.innerText = randomGreeting;
 
         // c. Start Clock & Weather
         startClock();
-        fetchWeather(); // Call the function
+        fetchWeather();
     } catch (err) {
         console.error("Greeting Error:", err);
     }
 }
 
-// Add this at the top with your other variables
 let dailySuggestion = "Vibing..."; 
 
 function startClock() {
@@ -197,6 +204,66 @@ async function fetchWeather() {
     };
 
     navigator.geolocation.getCurrentPosition(success, error);
+}
+// 1. Open Settings (Recall the Lockscreen)
+function openSettings() {
+    const lockscreen = document.getElementById('lockscreen');
+    const nameInput = document.getElementById('user-name');
+    const preview = document.getElementById('avatar-preview');
+
+    // Pre-fill with current data so they don't start from scratch
+    if (userProfile) {
+        nameInput.value = userProfile.displayName;
+        if (userProfile.avatar) {
+            preview.style.backgroundImage = `url(${userProfile.avatar})`;
+            preview.dataset.img = userProfile.avatar;
+        }
+    }
+
+    lockscreen.style.display = "flex";
+    setTimeout(() => {
+        lockscreen.style.opacity = "1";
+    }, 10);
+}
+
+// 2. Modified saveSetup (To handle the 'Burn & Adapt' logic)
+// We use the same saveSetup function but ensure it refreshes the UI
+function saveSetup(choice) {
+    const nameInput = document.getElementById('user-name');
+    const name = nameInput.value.trim();
+    const photo = document.getElementById('avatar-preview').dataset.img || "";
+
+    if (!name) {
+        nameInput.style.border = "2px solid #ff4d6d";
+        return;
+    }
+
+    // THE BURN: Overwrite the existing object in localStorage
+    userProfile = { 
+        displayName: name, 
+        avatar: photo, 
+        persona: choice 
+    };
+    
+    localStorage.setItem('vibe_profile', JSON.stringify(userProfile));
+
+    // THE ADAPT: Immediate UI Refresh
+    const headerAvatar = document.getElementById('header-avatar-circle');
+    if (headerAvatar && userProfile.avatar) {
+        headerAvatar.style.backgroundImage = `url(${userProfile.avatar})`;
+    }
+
+    // Re-run the greeting engine with the NEW persona and name
+    setDynamicGreeting(userProfile.persona);
+    
+    // Close the layer
+    const lockscreen = document.getElementById('lockscreen');
+    lockscreen.style.opacity = "0";
+    setTimeout(() => {
+        lockscreen.style.display = "none";
+    }, 500);
+    
+    console.log("Vibe updated and adapted, blud! 🦾");
 }
 // 3. The "Clutch" logic that actually pulls the data
 async function updateWeatherLogic(lat, lon, forcedCity = null) {
@@ -269,8 +336,8 @@ async function announceVibe() {
     const period = ampm === 'AM' ? 'morning' : 'evening';
     const timeForVoice = `${hours} ${minutesStr} in the ${period}`;
 
-    // 2. DATA SCRAPING
-    const welcome = document.getElementById('welcome-text')?.innerText || "Hi Baroness";
+    // 2. DATA SCRAPING (FIXED: safe welcome text)
+    const welcome = userProfile ? `Hi ${userProfile.displayName}` : (document.getElementById('welcome-text')?.innerText || "Hi there");
     const greeting = document.getElementById('dynamic-greeting')?.innerText || "Welcome back";
     const rawStatus = document.getElementById('local-time')?.innerText || "";
     const cleanStatus = rawStatus.split('||')[1]?.trim() || "stay in your zone";
@@ -458,5 +525,8 @@ function downloadCard(cardId, fileName) {
     });
 }
 
-// 4. Event Listeners & Init
-document.getElementById('passcode-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') checkPasscode(); });
+// 4. Event Listeners & Init (FIXED: safe event listener)
+const passInput = document.getElementById('passcode-input');
+if (passInput) {
+    passInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkPasscode(); });
+}
