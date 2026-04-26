@@ -4,71 +4,65 @@ if ('serviceWorker' in navigator) {
     .then(() => console.log("Vibe Service Worker Registered 🦾"))
     .catch((err) => console.log("SW Failed, mate:", err));
 }
-var _$_3619=["\x70\x68\x65\x73\x74\x6F\x4E\x65\x32\x31","","\x70\x61\x73\x73\x63\x6F\x64\x65\x2D\x69\x6E\x70\x75\x74","\x67\x65\x74\x45\x6C\x65\x6D\x65\x6E\x74\x42\x79\x49\x64","\x74\x6F\x67\x67\x6C\x65\x2D\x70\x61\x73\x73","\x74\x79\x70\x65","\x70\x61\x73\x73\x77\x6F\x72\x64","\x74\x65\x78\x74","\x69\x6E\x6E\x65\x72\x54\x65\x78\x74","\uD83D\uDD12","\uD83D\uDC41\uFE0F","\x74\x6F\x4C\x6F\x77\x65\x72\x43\x61\x73\x65","\x74\x72\x69\x6D","\x76\x61\x6C\x75\x65","\x75\x73\x65\x72\x2D\x6E\x61\x6D\x65","\x6C\x6F\x63\x6B\x2D\x6D\x73\x67","\x70\x68\x65\x73\x74\x79","\x70\x68\x65\x73\x74\x6F\x6E\x65","\x62\x61\x72\x6F\x6E\x65\x73\x73","\x62","\x50\x68\x65\x73\x74\x79","\x42\x61\x72\x6F\x6E\x65\x73\x73","\x76\x61\x75\x6C\x74\x5F\x75\x73\x65\x72","\x73\x65\x74\x49\x74\x65\x6D","\x76\x61\x75\x6C\x74\x5F\x6C\x6F\x67\x69\x6E\x5F\x74\x69\x6D\x65","\x6E\x6F\x77","\x49\x64\x65\x6E\x74\x69\x74\x79\x20\x6F\x72\x20\x63\x6F\x64\x65\x20\x6D\x69\x73\x6D\x61\x74\x63\x68\x2C\x20\x62\x65\x73\x74\x69\x65\x2E\x20\uD83D\uDEAB","\x6C\x6F\x63\x6B\x73\x63\x72\x65\x65\x6E","\x6F\x70\x61\x63\x69\x74\x79","\x73\x74\x79\x6C\x65","\x30","\x64\x69\x73\x70\x6C\x61\x79","\x6E\x6F\x6E\x65","\x6F\x6E\x6C\x6F\x61\x64","\x67\x65\x74\x49\x74\x65\x6D","\x72\x65\x6D\x6F\x76\x65\x49\x74\x65\x6D"];
-var SECRET_CODE=_$_3619[0];//1
-var SESSION_TIMEOUT=15* 60* 1000;//2
-var currentUser=_$_3619[1];//3
-function togglePeek()
-{
-	var _0x15AE9=document[_$_3619[3]](_$_3619[2]);//7
-	var _0x15B2F=document[_$_3619[3]](_$_3619[4]);//8
-	if(_0x15AE9[_$_3619[5]]=== _$_3619[6])
-	{
-		_0x15AE9[_$_3619[5]]= _$_3619[7];_0x15B2F[_$_3619[8]]= _$_3619[9]
-	}
-	else 
-	{
-		_0x15AE9[_$_3619[5]]= _$_3619[6];_0x15B2F[_$_3619[8]]= _$_3619[10]
-	}
-	
+
+// 1. Setup & Persistence Engine
+let userProfile = JSON.parse(localStorage.getItem('vibe_profile')) || null;
+
+function handleImageUpload(event) {
+    const reader = new FileReader();
+    reader.onload = function() {
+        const preview = document.getElementById('avatar-preview');
+        preview.style.backgroundImage = `url(${reader.result})`;
+        preview.dataset.img = reader.result;
+    };
+    reader.readAsDataURL(event.target.files[0]);
 }
-function checkPasscode()
-{
-	var _0x15AA3=document[_$_3619[3]](_$_3619[14])[_$_3619[13]][_$_3619[12]]()[_$_3619[11]]();//20
-	var _0x15AE9=document[_$_3619[3]](_$_3619[2])[_$_3619[13]];//21
-	var _0x15A5D=document[_$_3619[3]](_$_3619[15]);//22
-	var _0x15A17=_0x15AA3=== _$_3619[16]|| _0x15AA3=== _$_3619[17];//24
-	var _0x159D1=_0x15AA3=== _$_3619[18]|| _0x15AA3=== _$_3619[19];//25
-	if((_0x15A17|| _0x159D1)&& _0x15AE9=== SECRET_CODE)
-	{
-		currentUser= _0x15A17?_$_3619[20]:_$_3619[21];localStorage[_$_3619[23]](_$_3619[22],currentUser);localStorage[_$_3619[23]](_$_3619[24],Date[_$_3619[25]]());unlockVault()
-	}
-	else 
-	{
-		_0x15A5D[_$_3619[8]]= _$_3619[26];document[_$_3619[3]](_$_3619[2])[_$_3619[13]]= _$_3619[1]
-	}
-	
+
+function saveSetup(choice) {
+    const nameInput = document.getElementById('user-name');
+    const name = nameInput.value.trim();
+    const photo = document.getElementById('avatar-preview').dataset.img || "";
+
+    if (!name) {
+        nameInput.style.border = "2px solid #ff4d6d";
+        return;
+    }
+
+    userProfile = { displayName: name, avatar: photo, persona: choice };
+    localStorage.setItem('vibe_profile', JSON.stringify(userProfile));
+    launchApp();
 }
-function unlockVault()
-{
-	var _0x158FF=document[_$_3619[3]](_$_3619[27]);//42
-	_0x158FF[_$_3619[29]][_$_3619[28]]= _$_3619[30];setTimeout(function()
-	{
-		_0x158FF[_$_3619[29]][_$_3619[31]]= _$_3619[32];updateDate();generateVibe();setDynamicGreeting(currentUser)
-	}
-	,500)
+
+function launchApp() {
+    const lockscreen = document.getElementById('lockscreen');
+    if (lockscreen) {
+        lockscreen.style.opacity = "0";
+        setTimeout(() => lockscreen.style.display = "none", 500);
+    }
+
+    // Apply Avatar to Header
+    const headerAvatar = document.getElementById('header-avatar-circle');
+    if (headerAvatar && userProfile.avatar) {
+        headerAvatar.style.backgroundImage = `url(${userProfile.avatar})`;
+    }
+
+    // Initialize the Vibe
+    updateDate();
+    generateVibe();
+    setDynamicGreeting(userProfile.persona); 
 }
-window[_$_3619[33]]= function()
-{
-	var _0x1598B=localStorage[_$_3619[34]](_$_3619[22]);//54
-	var _0x15945=localStorage[_$_3619[34]](_$_3619[24]);//55
-	var _0x158B9=Date[_$_3619[25]]();//56
-	if(_0x1598B&& _0x15945&& (_0x158B9- parseInt(_0x15945)< SESSION_TIMEOUT))
-	{
-		currentUser= _0x1598B;var _0x158FF=document[_$_3619[3]](_$_3619[27]);//61
-		if(_0x158FF)
-		{
-			_0x158FF[_$_3619[29]][_$_3619[31]]= _$_3619[32]
-		}
-		//62
-		updateDate();generateVibe();setDynamicGreeting(currentUser)
-	}
-	else 
-	{
-		localStorage[_$_3619[35]](_$_3619[22]);localStorage[_$_3619[35]](_$_3619[24])
-	}
-	
-}
+
+window.onload = () => {
+    if (userProfile) {
+        // Direct launch if profile exists
+        document.getElementById('lockscreen').style.display = "none";
+        launchApp();
+    } else {
+        // Show setup if first time
+        document.getElementById('lockscreen').style.display = "flex";
+    }
+};
+
 let deferredPrompt;
 const installModal = document.getElementById('install-modal');
 const installBtn = document.getElementById('install-btn');
@@ -157,9 +151,10 @@ async function setDynamicGreeting(user) {
         let timeOfDay = (hour >= 5 && hour < 12) ? "morning" : (hour >= 12 && hour < 17) ? "afternoon" : "evening";
 
         // a. Set Welcome Text (MAKE SURE THIS ID EXISTS IN HTML)
-        const welcomeEl = document.getElementById('welcome-text');
-        if (welcomeEl) welcomeEl.innerText = `Hi ${user}, Welcome.`;
-        
+       const welcomeEl = document.getElementById('welcome-text');
+        if (welcomeEl && userProfile) {
+            welcomeEl.innerText = `Hi ${userProfile.displayName}, Welcome back.`;
+        }
         // b. Set Greeting
         const userGreetings = greetingBank[timeOfDay][user];
         const randomGreeting = userGreetings[Math.floor(Math.random() * userGreetings.length)];

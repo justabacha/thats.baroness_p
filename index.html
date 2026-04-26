@@ -15,28 +15,32 @@
     <button id="install-btn" style="background: #ff4d6d; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">Install App</button>
     <button id="close-modal" style="background: transparent; color: #aaa; border: none; margin-left: 10px; cursor: pointer;">Maybe later</button>
 </div>
-     <div id="lockscreen">
+    <div id="lockscreen">
         <div class="lock-box">
-            <h2>Phesty Signature Vault 🔐</h2>
-            <p>Who is entering the vibe?</p>
+            <h2 style="color: #ff4d6d; margin-bottom: 5px;">Vibe Profile 🌸</h2>
+            <p style="font-size: 0.9rem; opacity: 0.8;">Set your identity for the vault.</p>
             
-            <input type="text" id="user-name" placeholder="jina please..." autocomplete="off">
-            
-           <p>Enter secret code:</p>
-            <div class="pass-wrapper">
-                <input type="password" id="passcode-input" placeholder="••••••" autocomplete="off">
-                <span id="toggle-pass" onclick="togglePeek()">👁️</span>
+            <div id="avatar-preview-container">
+                <div id="avatar-preview" onclick="document.getElementById('avatar-input').click()"></div>
+                <input type="file" id="avatar-input" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
             </div>
 
-            <button onclick="checkPasscode()">Unlock</button>
-            <p id="lock-msg"></p>
+            <input type="text" id="user-name" placeholder="Enter your nickname..." autocomplete="off">
+            
+            <div class="setup-actions">
+                <button class="mode-btn" onclick="saveSetup('Phesty')">Enter as Phesty🦾</button>
+                <button class="mode-btn" onclick="saveSetup('Baroness')">Enter as Baroness👑</button>
+            </div>
         </div>
     </div>
     <div class="container">
        <header class="dashboard-header">
-            <div class="user-greeting-box">
-                <h2 id="welcome-text">Hi User, Welcome.</h2>
-                <p id="dynamic-greeting">Loading the vibe...</p>
+            <div class="user-greeting-box" style="display: flex; align-items: center; gap: 15px;">
+                <div id="header-avatar-circle"></div>
+                <div class="greet-text">
+                    <h2 id="welcome-text">Hi User, Welcome.</h2>
+                    <p id="dynamic-greeting">Loading the vibe...</p>
+                </div>
             </div>
             
             <div class="command-box">
