@@ -1,9 +1,9 @@
 /***************************************************************************/
-/*if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js')
     .then(() => console.log("Vibe Service Worker Registered 🦾"))
     .catch((err) => console.log("SW Failed:", err));
-}*/
+}
 
 // 1. Setup & Persistence Engine
 let userProfile = JSON.parse(localStorage.getItem('vibe_profile')) || null;
