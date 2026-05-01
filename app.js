@@ -1,10 +1,23 @@
 /***************************************************************************/
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js')
-    .then(() => console.log("Vibe Service Worker Registered 🦾"))
-    .catch((err) => console.log("SW Failed:", err));
-}
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then((reg) => {
+      console.log("Vibe Service Worker Registered 🦾");
 
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            // New version detected and installed, auto-reloading to apply heat!
+            console.log("New version found! Reloading...");
+            window.location.reload();
+          }
+        });
+      });
+    }).catch((err) => console.log("SW Failed:", err));
+  });
+}
+/***************************************************************************/
 // 1. Setup & Persistence Engine
 let userProfile = JSON.parse(localStorage.getItem('vibe_profile')) || null;
 
@@ -254,7 +267,7 @@ async function updateWeatherLogic(lat, lon, forcedCity = null) {
     }
 }
 
-/*async function announceVibe() {
+async function announceVibe() {
     const now = new Date();
     const dayName = now.toLocaleDateString('en-GB', { weekday: 'long' });
     const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
@@ -296,7 +309,7 @@ async function updateWeatherLogic(lat, lon, forcedCity = null) {
         utterance.rate = 1.0;
         window.speechSynthesis.speak(utterance);
     }
-}*/
+}
 
 function startVibeParade() {
     let origin = document.querySelector('.parade-origin');
