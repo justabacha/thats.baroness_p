@@ -1,9 +1,9 @@
 /***************************************************************************/
-if ('serviceWorker' in navigator) {
+/*if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js')
     .then(() => console.log("Vibe Service Worker Registered 🦾"))
-    .catch((err) => console.log("SW Failed, mate:", err));
-}
+    .catch((err) => console.log("SW Failed:", err));
+}*/
 
 // 1. Setup & Persistence Engine
 let userProfile = JSON.parse(localStorage.getItem('vibe_profile')) || null;
@@ -15,9 +15,12 @@ function handleImageUpload(event) {
         preview.style.backgroundImage = `url(${reader.result})`;
         preview.dataset.img = reader.result;
     };
-    reader.readAsDataURL(event.target.files[0]);
+    if (event.target.files && event.target.files[0]) {
+        reader.readAsDataURL(event.target.files[0]);
+    }
 }
 
+// Consolidated saveSetup - Handles both first-time and settings updates
 function saveSetup(choice) {
     const nameInput = document.getElementById('user-name');
     const name = nameInput.value.trim();
@@ -28,9 +31,16 @@ function saveSetup(choice) {
         return;
     }
 
-    userProfile = { displayName: name, avatar: photo, persona: choice };
+    userProfile = { 
+        displayName: name, 
+        avatar: photo, 
+        persona: choice 
+    };
+    
     localStorage.setItem('vibe_profile', JSON.stringify(userProfile));
-    launchApp();
+    console.log("Vibe updated and adapted, blud! 🦾");
+    
+    launchApp(); // Immediately boot up the interface
 }
 
 function launchApp() {
@@ -40,77 +50,90 @@ function launchApp() {
         setTimeout(() => lockscreen.style.display = "none", 500);
     }
 
-    // Apply Avatar to Header
+    // Apply Avatar to Header safely
     const headerAvatar = document.getElementById('header-avatar-circle');
-    if (headerAvatar && userProfile.avatar) {
+    if (headerAvatar && userProfile && userProfile.avatar) {
         headerAvatar.style.backgroundImage = `url(${userProfile.avatar})`;
     }
 
     // Initialize the Vibe
     updateDate();
-    generateVibe();
-    // FIXED: Safe persona check
+    
+    // Safety check for quotes.js
+    if (typeof signatureLoops !== 'undefined') {
+        generateVibe();
+    } else {
+        console.error("signatureLoops missing! Make sure quotes.js loads first.");
+    }
+
+    // Safe persona check
     if (userProfile && userProfile.persona) {
         setDynamicGreeting(userProfile.persona); 
     } else {
-        console.warn("No user profile found, mate. Using default.");
+        console.warn("No user profile found. Using default.");
         setDynamicGreeting('Phesty');
     }
 }
 
 window.onload = () => {
     if (userProfile) {
-        // Direct launch if profile exists
         document.getElementById('lockscreen').style.display = "none";
         launchApp();
     } else {
-        // Show setup if first time
         document.getElementById('lockscreen').style.display = "flex";
     }
 };
 
+function openSettings() {
+    const lockscreen = document.getElementById('lockscreen');
+    const nameInput = document.getElementById('user-name');
+    const preview = document.getElementById('avatar-preview');
+
+    if (userProfile) {
+        nameInput.value = userProfile.displayName;
+        if (userProfile.avatar) {
+            preview.style.backgroundImage = `url(${userProfile.avatar})`;
+            preview.dataset.img = userProfile.avatar;
+        }
+    }
+
+    lockscreen.style.display = "flex";
+    setTimeout(() => { lockscreen.style.opacity = "1"; }, 10);
+}
+
+// App Install Logic
 let deferredPrompt;
 const installModal = document.getElementById('install-modal');
 const installBtn = document.getElementById('install-btn');
 
-// This catches the 'Ready' signal from the browser
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    
-    // Show the modal the VERY millisecond the browser allows it
-    if (installModal) {
-        installModal.style.display = 'block';
-        console.log("Install prompt is ready to go, blud! 🚀");
-    }
+    if (installModal) installModal.style.display = 'block';
 });
 
-// The actual install action
 if (installBtn) {
     installBtn.addEventListener('click', async () => {
         if (!deferredPrompt) return;
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
-        console.log(`User vibe: ${outcome}`);
         deferredPrompt = null;
         installModal.style.display = 'none';
     });
 }
 
-// Close button logic
 const closeBtn = document.getElementById('close-modal');
 if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
-        installModal.style.display = 'none';
-    });
+    closeBtn.addEventListener('click', () => { installModal.style.display = 'none'; });
 }
+
 // Wake up the voice engine
 window.speechSynthesis.getVoices();
 if (speechSynthesis.onvoiceschanged !== undefined) {
     speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
 }
 
-// 2. The Greeting Vault (Personalized)
+// 2. The Greeting Vault
 const greetingBank = {
     morning: {
         Phesty: [
@@ -150,25 +173,25 @@ const greetingBank = {
     }
 };
 
-// --- Updated Greeting & Weather Engine ---
+let dailySuggestion = "Vibing..."; 
+
 async function setDynamicGreeting(user) {
     try {
         const hour = new Date().getHours();
         let timeOfDay = (hour >= 5 && hour < 12) ? "morning" : (hour >= 12 && hour < 17) ? "afternoon" : "evening";
 
-        // a. Set Welcome Text
-       const welcomeEl = document.getElementById('welcome-text');
+        const welcomeEl = document.getElementById('welcome-text');
         if (welcomeEl && userProfile) {
             welcomeEl.innerText = `Hi ${userProfile.displayName}, Welcome back.`;
         }
-        // b. Set Greeting (FIXED: safe persona fallback)
+
         const persona = user || (userProfile ? userProfile.persona : 'Phesty');
         const userGreetings = greetingBank[timeOfDay][persona] || greetingBank[timeOfDay]['Phesty'];
         const randomGreeting = userGreetings[Math.floor(Math.random() * userGreetings.length)];
+        
         const greetingEl = document.getElementById('dynamic-greeting');
         if (greetingEl) greetingEl.innerText = randomGreeting;
 
-        // c. Start Clock & Weather
         startClock();
         fetchWeather();
     } catch (err) {
@@ -176,99 +199,29 @@ async function setDynamicGreeting(user) {
     }
 }
 
-let dailySuggestion = "Vibing..."; 
-
 function startClock() {
     const updateTime = () => {
         const now = new Date();
         const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
-        
-        // Update the line to include the divider and the suggestion
-        document.getElementById('local-time').innerText = `${timeStr} HRS || ${dailySuggestion}`;
+        const localTimeEl = document.getElementById('local-time');
+        if(localTimeEl) localTimeEl.innerText = `${timeStr} HRS || ${dailySuggestion}`;
     };
     updateTime();
     setInterval(updateTime, 60000); 
 }
-async function fetchWeather() {
-    // 1. If GPS works, use real location
-    const success = (position) => {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-        updateWeatherLogic(lat, lon);
-    };
 
-    // 2. If GPS fails, fallback to Nairobi (Default Kenya Vibe)
+async function fetchWeather() {
+    const success = (position) => {
+        updateWeatherLogic(position.coords.latitude, position.coords.longitude);
+    };
     const error = () => {
-        console.log("GPS locked, falling back to Nairobi.");
         updateWeatherLogic(-1.2864, 36.8172, "Nairobi"); 
     };
-
     navigator.geolocation.getCurrentPosition(success, error);
 }
-// 1. Open Settings (Recall the Lockscreen)
-function openSettings() {
-    const lockscreen = document.getElementById('lockscreen');
-    const nameInput = document.getElementById('user-name');
-    const preview = document.getElementById('avatar-preview');
 
-    // Pre-fill with current data so they don't start from scratch
-    if (userProfile) {
-        nameInput.value = userProfile.displayName;
-        if (userProfile.avatar) {
-            preview.style.backgroundImage = `url(${userProfile.avatar})`;
-            preview.dataset.img = userProfile.avatar;
-        }
-    }
-
-    lockscreen.style.display = "flex";
-    setTimeout(() => {
-        lockscreen.style.opacity = "1";
-    }, 10);
-}
-
-// 2. Modified saveSetup (To handle the 'Burn & Adapt' logic)
-// We use the same saveSetup function but ensure it refreshes the UI
-function saveSetup(choice) {
-    const nameInput = document.getElementById('user-name');
-    const name = nameInput.value.trim();
-    const photo = document.getElementById('avatar-preview').dataset.img || "";
-
-    if (!name) {
-        nameInput.style.border = "2px solid #ff4d6d";
-        return;
-    }
-
-    // THE BURN: Overwrite the existing object in localStorage
-    userProfile = { 
-        displayName: name, 
-        avatar: photo, 
-        persona: choice 
-    };
-    
-    localStorage.setItem('vibe_profile', JSON.stringify(userProfile));
-
-    // THE ADAPT: Immediate UI Refresh
-    const headerAvatar = document.getElementById('header-avatar-circle');
-    if (headerAvatar && userProfile.avatar) {
-        headerAvatar.style.backgroundImage = `url(${userProfile.avatar})`;
-    }
-
-    // Re-run the greeting engine with the NEW persona and name
-    setDynamicGreeting(userProfile.persona);
-    
-    // Close the layer
-    const lockscreen = document.getElementById('lockscreen');
-    lockscreen.style.opacity = "0";
-    setTimeout(() => {
-        lockscreen.style.display = "none";
-    }, 500);
-    
-    console.log("Vibe updated and adapted, blud! 🦾");
-}
-// 3. The "Clutch" logic that actually pulls the data
 async function updateWeatherLogic(lat, lon, forcedCity = null) {
     try {
-        // Get City Name
         let cityName = forcedCity;
         if (!cityName) {
             const geoRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
@@ -276,44 +229,33 @@ async function updateWeatherLogic(lat, lon, forcedCity = null) {
             cityName = geoData.city || geoData.locality || "Eldoret";
         }
 
-        // Get Weather & Humidity
         const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=relative_humidity_2m`);
         const data = await weatherRes.json();
         const weather = data.current_weather;
         const temp = Math.round(weather.temperature);
         const humid = data.hourly ? data.hourly.relative_humidity_2m[0] : "--";
 
-        // Update the GLOBAL suggestion
         if (temp <= 18) dailySuggestion = `${cityName} is cold, stay warm! ☕`;
         else if (temp > 18 && temp < 26) dailySuggestion = `${cityName} is chill, enjoy the vibe. 🍃`;
         else dailySuggestion = `${cityName} is heating up! Keep icy. 🧊`;
 
-        // Update Circles
         document.getElementById('temp').innerText = `${temp}°C`;
         document.getElementById('humidity').innerText = `${humid}%`;
         
-        // Refresh the Status Bar (Time || Suggestion)
         const now = new Date();
         const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
         document.getElementById('local-time').innerText = `${timeStr} HRS || ${dailySuggestion}`;
-        
-        // Label clean up
         document.getElementById('condition').innerText = "Temperature";
         
-        setTimeout(() => {
-            announceVibe();
-        }, 1500);
-
+        setTimeout(() => { announceVibe(); }, 1500);
     } catch (err) {
         console.error("Logic Error:", err);
         dailySuggestion = "Vibing Locally";
     }
 }
 
-async function announceVibe() {
-    // 1. DYNAMIC DATE & TIME
+/*async function announceVibe() {
     const now = new Date();
-    
     const dayName = now.toLocaleDateString('en-GB', { weekday: 'long' });
     const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
 
@@ -322,71 +264,40 @@ async function announceVibe() {
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12 || 12; 
 
-    // Natural minute pronunciation
-    let minutesStr = "";
-    if (minutes === 0) {
-        minutesStr = "o'clock";
-    } else if (minutes < 10) {
-        minutesStr = `oh ${minutes}`;
-    } else {
-        minutesStr = minutes;
-    }
-
-    // More human time phrasing
+    let minutesStr = (minutes === 0) ? "o'clock" : (minutes < 10) ? `oh ${minutes}` : minutes;
     const period = ampm === 'AM' ? 'morning' : 'evening';
     const timeForVoice = `${hours} ${minutesStr} in the ${period}`;
 
-    // 2. DATA SCRAPING (FIXED: safe welcome text)
     const welcome = userProfile ? `Hi ${userProfile.displayName}` : (document.getElementById('welcome-text')?.innerText || "Hi there");
     const greeting = document.getElementById('dynamic-greeting')?.innerText || "Welcome back";
     const rawStatus = document.getElementById('local-time')?.innerText || "";
     const cleanStatus = rawStatus.split('||')[1]?.trim() || "stay in your zone";
 
-    // 3. NATURAL MESSAGE STRUCTURE (no awkward pauses, smooth flow)
-    const introVariants = [
-        "Quick update,",
-        "Here’s where we are,",
-        "Right now,"
-    ];
+    const introVariants = ["Quick update,", "Here’s where we are,", "Right now,"];
     const intro = introVariants[Math.floor(Math.random() * introVariants.length)];
 
     const fullMessage = `${welcome}. ${greeting}... ${intro} it’s ${dayName}, ${dateStr},. The time is ${timeForVoice}.. Just so you know, ${cleanStatus}.`;
-
-    // Clean emojis (keep punctuation for natural speech)
     const cleanText = fullMessage.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
 
-    // 4. ELEVENLABS CALL
     try {
         const response = await fetch('/api/speak', {
             method: 'POST',
             body: JSON.stringify({ text: cleanText })
         });
-
         if (!response.ok) throw new Error("API Bridge failed");
-
         const audioBlob = await response.blob();
-        const audioUrl = URL.createObjectURL(audioBlob);
-        const audio = new Audio(audioUrl);
-
+        const audio = new Audio(URL.createObjectURL(audioBlob));
         audio.play();
-        console.log("Vibe Announced: Smooth Human Flow 🦾");
-
     } catch (error) {
-        console.error("AI Bridge failed, falling back to local...", error);
-        
-        // 5. FALLBACK (clean punctuation, no weird pauses)
         const utterance = new SpeechSynthesisUtterance(cleanText);
         const voices = window.speechSynthesis.getVoices();
-        const fallbackVoice = voices.find(v => 
-            v.name.toLowerCase().includes("male") && v.lang.startsWith("en")
-        );
-
+        const fallbackVoice = voices.find(v => v.name.toLowerCase().includes("male") && v.lang.startsWith("en"));
         if (fallbackVoice) utterance.voice = fallbackVoice;
         utterance.rate = 1.0;
-
         window.speechSynthesis.speak(utterance);
     }
-}
+}*/
+
 function startVibeParade() {
     let origin = document.querySelector('.parade-origin');
     if (!origin) {
@@ -394,30 +305,20 @@ function startVibeParade() {
         origin.className = 'parade-origin';
         document.body.appendChild(origin);
     }
-
     const emojis = ['❤️', '💖', '✨', '🌸', '💎', '🔥', '👑'];
     
     setInterval(() => {
         const p = document.createElement('span');
         p.className = 'parade-emoji';
         p.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
-        
-        // V-SHAPE: Spread target randomized
         const spreadWidth = (Math.random() - 0.5) * 1000; 
         p.style.setProperty('--spread', `${spreadWidth}px`);
-        
-        // SLOW PARADE: 8-12 seconds duration
-        const duration = (Math.random() * 4 + 8) + 's';
-        p.style.setProperty('--duration', duration);
-
+        p.style.setProperty('--duration', (Math.random() * 4 + 8) + 's');
         origin.appendChild(p);
-
-        // Clean up memory
         setTimeout(() => p.remove(), 13000);
-    }, 450); // Steady flow
+    }, 450); 
 }
 
-// Trigger as soon as the vibe is ready
 window.addEventListener('load', startVibeParade);
 
 // 3. Core Engine (Date, Vibe, Download)
@@ -429,15 +330,13 @@ function updateDate() {
 }
 
 function generateVibe() {
-    // 1. Setup & Date Logic
-    const launchDate = new Date(2026, 3, 11); // April 11, 2026
+    const launchDate = new Date(2026, 3, 11); 
     const today = new Date();
     const MASTER_SEED = 2026;
 
     const timeDiff = today.getTime() - launchDate.getTime();
     const daysSinceLaunch = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
 
-    // 2. Deterministic Shuffle (Ensures same vibe for everyone today)
     const shuffledLoops = [...signatureLoops];
     let seed = MASTER_SEED;
     
@@ -447,37 +346,24 @@ function generateVibe() {
         [shuffledLoops[i], shuffledLoops[j]] = [shuffledLoops[j], shuffledLoops[i]];
     }
 
-    // 3. Pick Today's Vibe
     const index = daysSinceLaunch % shuffledLoops.length;
     const vibe = shuffledLoops[index];
 
-    // 4. Update Text Content
-    document.getElementById('text1').innerText = `${vibe.part1}`;
-    document.getElementById('text2').innerText = `${vibe.part2}`;
+    document.getElementById('text1').innerText = vibe.part1;
+    document.getElementById('text2').innerText = vibe.part2;
 
-    // 5. Smart Image Loader (The Case-Sensitivity Fix)
     const loadSafeImage = (elementId, imagePath) => {
         const el = document.getElementById(elementId);
+        if (!el) return;
         const img = new Image();
-        
         img.src = imagePath;
-        
-        img.onload = () => {
-            el.style.backgroundImage = `url("${imagePath}")`;
-        };
-
+        img.onload = () => { el.style.backgroundImage = `url("${imagePath}")`; };
         img.onerror = () => {
-            // Swap extension if first attempt fails
-            let altPath = imagePath.endsWith('.jpg') 
-                ? imagePath.replace('.jpg', '.JPG') 
-                : imagePath.replace('.JPG', '.jpg');
-            
-            console.log(`Fallback trigger: Trying ${altPath}`);
+            let altPath = imagePath.endsWith('.jpg') ? imagePath.replace('.jpg', '.JPG') : imagePath.replace('.JPG', '.jpg');
             el.style.backgroundImage = `url("${altPath}")`;
         };
     };
 
-    // Fire the loaders
     loadSafeImage('card1', vibe.photo1);
     loadSafeImage('card2', vibe.photo2);
 }
@@ -486,46 +372,39 @@ function downloadCard(cardId, fileName) {
     const card = document.getElementById(cardId);
     if (!card) return;
 
-    // 1. Get the actual visual space the tilted card takes up
     const rect = card.getBoundingClientRect();
-
     html2canvas(card, {
         useCORS: true,
         allowTaint: true,
         backgroundColor: null,
-        // 2. SCALE 3 or 4 gives "Retina/HD" crispness
         scale: 3, 
         logging: false,
-        // 3. Ensure we capture the full tilted dimensions
         width: rect.width,
         height: rect.height,
         scrollX: 0,
         scrollY: -window.scrollY,
-        // 4. Force high-quality image rendering
         imageTimeout: 0,
         onclone: (clonedDoc) => {
-            // This ensures the cloned card is visible for the "camera"
-            const clonedCard = clonedDoc.getElementById(cardId);
-            clonedCard.style.margin = "0";
+            clonedDoc.getElementById(cardId).style.margin = "0";
         }
     }).then(canvas => {
-        // 5. Convert to High-Quality Blob for better reliability than DataURL
         canvas.toBlob((blob) => {
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.download = `${fileName}-${Date.now()}.png`;
             link.href = url;
             link.click();
-            
-            // Cleanup memory
             setTimeout(() => URL.revokeObjectURL(url), 1000);
-        }, 'image/png', 1.0); // 1.0 is max quality
+        }, 'image/png', 1.0); 
     }).catch(err => {
-        console.error("HD Capture failed, mate:", err);
+        console.error("HD Capture failed:", err);
     });
 }
 
-// 4. Event Listeners & Init (FIXED: safe event listener)
+// 4. Safe Passcode Listener (Placeholder)
+function checkPasscode() {
+    console.log("Passcode check fired");
+}
 const passInput = document.getElementById('passcode-input');
 if (passInput) {
     passInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkPasscode(); });
