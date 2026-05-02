@@ -30,6 +30,7 @@
         <img src="https://img.icons8.com/fluency/48/star.png" width="28">
     </button>
 </div>
+
 <!-- Custom Glass Calendar Popup -->
 <div id="calendar-modal" class="calendar-morphism-vibe">
     <div class="cal-header">
@@ -44,16 +45,45 @@
         <!-- Days injected by JS -->
     </div>
 </div>
+
 <!-- The Mophosic Emoji Tray -->
 <div id="emoji-tray" class="emoji-tray-vibe">
     <div id="dynamic-emoji-grid" class="emoji-grid-scroll">
         <!-- JS will inject emojis here -->
     </div>
 </div>
+
+<div id="rating-modal" class="modal-overlay" style="display: none;">
+    <div class="morphism-card rating-card">
+        <div class="rating-header">
+            <h3>RATE THE EXPERIENCE</h3>
+            <button class="close-modal" onclick="closeRatingModal()">×</button>
+        </div>
+
+        <!-- The Other Person's Rating Area -->
+        <div id="peer-rating-display" class="peer-display">
+            <!-- JS will inject: "NAME: 5 ⭐⭐⭐⭐⭐" -->
+        </div>
+
+        <div class="star-input-container">
+            <div class="star-row" id="star-row">
+                <span class="star" data-value="1">★</span>
+                <span class="star" data-value="2">★</span>
+                <span class="star" data-value="3">★</span>
+                <span class="star" data-value="4">★</span>
+                <span class="star" data-value="5">★</span>
+            </div>
+            <p id="rating-label">Select your rating</p>
+        </div>
+
+        <button class="confirm-btn" onclick="saveRating()">CONFIRM RATING</button>
+    </div>
+</div>
+
     <main class="wish-gallery">
 </main>
 </div>
-<script src="emojis.js"></script>
-<script src="wishlist.js"></script>
+<script src="/menu/emojis.js"></script>
+<script src="/menu/wishlist.js"></script>
 </body>
 </html>

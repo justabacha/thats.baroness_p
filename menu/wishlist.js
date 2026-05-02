@@ -301,18 +301,81 @@ window.insertEmoji = function(char) {
     }
 };
 
+let currentRatingSelection = 0;
+let ratingWishId = null;
+
+// The one and only Rating Trigger
 window.promptRating = function(id) {
-    const wish = AppState.wishes.find(w => w.id === id);
-    const score = prompt(`Rate the vibe (1-5) for ${AppState.users[AppState.currentUser].name}:`, "5");
-    
-    const numScore = parseInt(score);
-    if (numScore >= 1 && numScore <= 5) {
-        // This saves it to the specific user (P or B)
-        wish.ratings[AppState.currentUser] = numScore;
-        renderGallery(); // Re-render to show the new dot and number
-    } else if (score !== null) {
-        alert("Keep it between 1 and 5, msee!");
+    // 1. If it's already open for THIS card, just close it (Toggle vibe)
+    const modal = document.getElementById('rating-modal');
+    if (modal.style.display === 'flex' && ratingWishId === id) {
+        return closeRatingModal();
     }
+
+    ratingWishId = id;
+    const wish = AppState.wishes.find(w => w.id === id);
+    const peerDisplay = document.getElementById('peer-rating-display');
+    
+    if (!modal) return console.error("Rating modal missing, blud!");
+
+    // 2. MOVEMENT: Find the row. We use the data-id we set in the gallery.
+    const cardElement = document.querySelector(`.wish-row[data-id="${id}"]`);
+    if (cardElement) {
+        cardElement.after(modal); 
+    }
+
+    // 3. Peer Rating Logic
+    const otherUser = AppState.currentUser === 'P' ? 'B' : 'P';
+    const otherScore = (wish.ratings && wish.ratings[otherUser]) ? wish.ratings[otherUser] : 0;
+    peerDisplay.innerHTML = otherScore > 0 
+        ? `${AppState.users[otherUser].name.toUpperCase()} RATED: ${otherScore} ${'★'.repeat(otherScore)}`
+        : `WAITING FOR ${AppState.users[otherUser].name.toUpperCase()}...`;
+
+    // 4. State Reset
+    currentRatingSelection = (wish.ratings && wish.ratings[AppState.currentUser]) ? wish.ratings[AppState.currentUser] : 0;
+    updateStarDisplay(currentRatingSelection);
+    
+    modal.style.display = 'flex';
+};
+
+// GLOBAL DELEGATION: This fixes the "nothing happening" when clicking stars
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('star')) {
+        currentRatingSelection = parseInt(e.target.dataset.value);
+        updateStarDisplay(currentRatingSelection);
+    }
+});
+
+function updateStarDisplay(value) {
+    const stars = document.querySelectorAll('.star');
+    const colorClass = value <= 2 ? 'rate-red' : (value === 3 ? 'rate-green' : 'rate-gold');
+
+    stars.forEach(s => {
+        const sVal = parseInt(s.dataset.value);
+        s.classList.remove('active', 'rate-red', 'rate-green', 'rate-gold');
+        if (sVal <= value) s.classList.add('active', colorClass);
+    });
+}
+
+window.saveRating = function() {
+    const wish = AppState.wishes.find(w => w.id === ratingWishId);
+    if (wish && currentRatingSelection > 0) {
+        if (!wish.ratings) wish.ratings = { P: 0, B: 0 };
+        wish.ratings[AppState.currentUser] = currentRatingSelection;
+        
+        // SAFETY: Move modal back to body before render so it's not deleted!
+        document.body.appendChild(document.getElementById('rating-modal'));
+        
+        renderGallery();
+        closeRatingModal();
+    }
+};
+
+window.closeRatingModal = () => {
+    const modal = document.getElementById('rating-modal');
+    modal.style.display = 'none';
+    // Move it back to the bottom of the body to keep it safe
+    document.body.appendChild(modal);
 };
 
 // Boot up the engine
