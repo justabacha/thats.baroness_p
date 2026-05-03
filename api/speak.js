@@ -15,51 +15,46 @@ export default async function handler(req, res) {
   // ---------- PRIMARY: Murf AI ----------
   const murfKey = process.env.MURF_API_KEY;
   const murfVoice = process.env.MURF_VOICE_ID;      // e.g., "Peter"
-  const murfModel = process.env.MURF_MODEL || 'FALCON'; // Corrected: Use 'FALCON' for the model
+  // Using the correct parameter name based on the API docs
+  const murfModelVersion = 'GEN2';                   // Use the high-quality Gen2 model
 
   if (murfKey && murfVoice) {
     try {
-      // The correct endpoint for non-streaming generation
       const murfResponse = await fetch('https://api.murf.ai/v1/speech/generate', {
         method: 'POST',
         headers: {
-          'api-key': murfKey,           // Correct header for authentication
+          'api-key': murfKey,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           text: text,
-          voiceId: murfVoice,           // Correct field name is "voiceId"
-          model: murfModel,              // Correctly uses the model variable
+          voiceId: murfVoice,
+          modelVersion: murfModelVersion,            // Fix: use 'modelVersion' instead of 'model'
           style: 'conversational',
           rate: 0,
           pitch: 0,
           format: 'MP3',
           channelType: 'MONO',
-          encodeAsBase64: false          // We want a URL, not base64, for easier handling
+          encodeAsBase64: false,
         }),
       });
 
       if (murfResponse.ok) {
         const murfData = await murfResponse.json();
-        // The response contains an 'audioFile' URL to the generated speech
         const audioUrl = murfData.audioFile;
-        
-        // Fetch the audio from the URL and stream it back to the client
         const audioResponse = await fetch(audioUrl);
         const audioBuffer = await audioResponse.arrayBuffer();
-        
         res.setHeader('Content-Type', 'audio/mpeg');
         return res.send(Buffer.from(audioBuffer));
       } else {
-        console.error(`Murf AI error: ${murfResponse.status}`);
         const errorText = await murfResponse.text();
-        console.error('Murf error details:', errorText);
+        console.error(`Murf AI error (${murfResponse.status}):`, errorText);
       }
     } catch (err) {
       console.error('Murf AI exception:', err.message);
     }
   } else {
-    console.warn('Murf credentials missing');
+    console.warn('Missing MURF_API_KEY or MURF_VOICE_ID');
   }
 
   // ---------- FALLBACK: Edge TTS (dynamic import to avoid ESM error) ----------
@@ -67,7 +62,7 @@ export default async function handler(req, res) {
     const { synthesize: edgeTTS } = await import('@echristian/edge-tts');
     const edgeResult = await edgeTTS({
       text: text,
-      voice: 'en-US-JennyNeural',
+      voice: 'en-US-JennyNeural',                   // Microsoft's high-quality neural voice
       outputFormat: 'audio-24khz-96kbitrate-mono-mp3',
     });
 
