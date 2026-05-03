@@ -40,7 +40,7 @@ function saveSetup(choice) {
     const photo = document.getElementById('avatar-preview').dataset.img || "";
 
     if (!name) {
-        nameInput.style.border = "2px solid #ff4d6d";
+        nameInput.style.border = "1px solid #ff4d6d";
         return;
     }
 
