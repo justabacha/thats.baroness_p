@@ -297,11 +297,47 @@ async function announceVibe() {
             method: 'POST',
             body: JSON.stringify({ text: cleanText })
         });
-        if (!response.ok) throw new Error("API Bridge failed");
+        
+        if (!response.ok) throw new Error(`API Bridge failed with status ${response.status}`);
+        
         const audioBlob = await response.blob();
-        const audio = new Audio(URL.createObjectURL(audioBlob));
-        audio.play();
+        
+        // --- ROBUST AUDIO PLAYBACK LOGIC ---
+        // 1. Get a URL for the Blob
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        // 2. Create an <audio> element
+        const audioElement = new Audio();
+        
+        // 3. Create a promise to handle the playing state, which solves many autoplay and loading issues
+        const playPromise = new Promise((resolve, reject) => {
+            // Set up one-time 'canplaythrough' event listener to be sure the audio is ready
+            audioElement.addEventListener('canplaythrough', () => {
+                audioElement.play()
+                    .then(resolve)
+                    .catch(reject);
+            }, { once: true });
+            
+            // Handle any errors during loading or playback
+            audioElement.addEventListener('error', (e) => {
+                console.error("Audio element error:", e);
+                reject(new Error(`Audio error: ${audioElement.error?.message || 'Unknown error'}`));
+            }, { once: true });
+            
+            // Set the source and load
+            audioElement.src = audioUrl;
+            audioElement.load(); // Explicitly start loading the audio
+        });
+        
+        await playPromise;
+        
+        // Clean up the blob URL after playback finishes or fails
+        audioElement.onended = () => URL.revokeObjectURL(audioUrl);
+        audioElement.onerror = () => URL.revokeObjectURL(audioUrl);
+        
     } catch (error) {
+        console.error("Primary audio API failed, falling back to browser speech:", error);
+        // --- Your existing native speech fallback ---
         const utterance = new SpeechSynthesisUtterance(cleanText);
         const voices = window.speechSynthesis.getVoices();
         const fallbackVoice = voices.find(v => v.name.toLowerCase().includes("male") && v.lang.startsWith("en"));
