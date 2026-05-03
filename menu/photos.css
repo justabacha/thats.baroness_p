@@ -295,3 +295,262 @@ body {
     background: #ff4444;
     color: #fff;
 }
+
+/******************************************************
+ GALLERY STYLES
+ ******************************************************/
+.gallery-header {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; 
+    gap: 10px;
+    margin-bottom: clamp(20px, 5vw, 40px);
+}
+
+.back-btn-pill {
+    justify-self: start;
+    background: #1a1a1a;
+    color: #fff;
+    border: 1px solid #333;
+    border-radius: 50px;
+    padding: 4px 15px;
+    font-weight: 900;
+    font-size: 0.7rem;
+    cursor: pointer;
+}
+
+.header-main-row {
+    width: 100%;
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+}
+
+.gallery-title {
+    flex-grow: 1;
+    font-size: clamp(1rem, 3vw, 2rem);
+    font-weight: 900;
+    text-align: center;
+    letter-spacing: 1px;
+    margin: 0 10px;
+}
+
+.user-circles-container {
+    justify-self: end;
+    display: flex;
+    gap: clamp(10px, 3vw, 20px);
+}
+
+.user-circle.small {
+    width: clamp(40px, 10vw, 55px);
+    height: clamp(40px, 10vw, 55px);
+    border: 2px solid #fec807; 
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    background: #fff;
+    color: #000;
+}
+
+.date-tag-container {
+    margin-bottom: 20px;
+}
+
+.month-pill {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.15); 
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #ffffff;
+    border: 1px solid rgba(8, 253, 49, 0.769);
+    border-radius: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: clamp(6px, 1.5vw, 10px) clamp(15px, 3vw, 25px);
+    font-size: clamp(0.7rem, 2vw, 0.9rem);
+    margin-bottom: clamp(4px, 2vw, 8px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.vibe-card {
+    position: relative;
+    border-radius: clamp(20px, 4vw, 30px); 
+    overflow: hidden;
+    border: 1px solid rgba(180, 178, 178, 0.925); 
+    background: rgba(255, 255, 255, 0.03);
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.vibe-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+}
+
+/* Ensure the image fills the card perfectly */
+.vibe-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.5s ease;
+}
+
+.vibe-card:hover img {
+    transform: scale(1.1); 
+}
+
+.card-like-btn {
+    position: absolute;
+    bottom: clamp(6px, 2vw, 10px);
+    right: clamp(6px, 2vw, 10px);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    width: clamp(32px, 8vw, 42px);
+    height: clamp(32px, 8vw, 42px);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(0.9rem, 2vw, 1.2rem);
+    color: #fff; 
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.card-like-btn.liked {
+    background: rgba(255, 68, 68, 0.8); 
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.1);
+    color: #fff;
+}
+
+.card-like-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.15);
+}
+
+/* Full HD Overlay */
+.photo-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.95);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(10px);
+}
+.close-overlay {
+    position: absolute;
+    top: clamp(20px, 4vh, 30px); 
+    right: clamp(20px, 4vw, 30px);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-size: 1.3rem;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1010;
+    transition: 0.3s;
+}
+
+.close-overlay:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: rotate(90deg);
+}
+.hd-photo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.photo-and-bar-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: clamp(85%, 90vw, 95%); 
+    max-height: 90vh; 
+}
+
+#hd-image {
+    max-width: 100%;
+    max-height: clamp(60vh, 70vh, 75vh); 
+    border-radius: clamp(15px, 3vw, 25px);
+    object-fit: contain; 
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    display: block;
+}
+
+.access-bar {
+    margin-top: clamp(10px, 2vh, 20px); 
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: clamp(8px, 1.5vh, 12px) clamp(20px, 4vw, 40px);
+    border-radius: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: clamp(15px, 5vw, 40px);
+    
+    width: fit-content;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.access-btn svg {
+    width: clamp(20px, 2.5vw, 26px);
+    height: clamp(20px, 2.5vw, 26px);
+    stroke: #fff;
+    transition: transform 0.2s ease;
+}
+.access-btn {
+    background: transparent; 
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    outline: none;
+}
+
+.access-btn:hover {
+    transform: scale(1.2);
+}
+
+.access-btn svg {
+    width: clamp(18px, 2.5vw, 20px);
+    height: clamp(15px, 2.5vw, 20px);
+    stroke: #ffffff; 
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); 
+}
+
+.hidden { display: none; }
