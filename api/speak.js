@@ -26,17 +26,17 @@ export default async function handler(req, res) {
           'api-key': murfKey,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          text: text,
-          voiceId: murfVoice,
-          modelVersion: murfModelVersion,            // Fix: use 'modelVersion' instead of 'model'
-          style: 'conversational',
-          rate: 0,
-          pitch: 0,
-          format: 'MP3',
-          channelType: 'MONO',
-          encodeAsBase64: false,
-        }),
+       body: JSON.stringify({
+  text: text,
+  voiceId: "en-US-marcus",      // ✅ Corrected full voice ID
+  modelVersion: "GEN2",          // ✅ Using the high-quality GEN2 model
+  style: 'conversational',
+  rate: 0,
+  pitch: 0,
+  format: 'MP3',
+  channelType: 'MONO',
+  encodeAsBase64: false,
+}),
       });
 
       if (murfResponse.ok) {
