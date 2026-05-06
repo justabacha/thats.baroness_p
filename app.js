@@ -271,24 +271,20 @@ async function announceVibe() {
     const now = new Date();
     const dayName = now.toLocaleDateString('en-GB', { weekday: 'long' });
     const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
-
     let hours = now.getHours();
     const minutes = now.getMinutes();
     const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12 || 12; 
+    hours = hours % 12 || 12;
 
     let minutesStr = (minutes === 0) ? "o'clock" : (minutes < 10) ? `oh ${minutes}` : minutes;
     const period = ampm === 'AM' ? 'morning' : 'evening';
     const timeForVoice = `${hours} ${minutesStr} in the ${period}`;
-
     const welcome = userProfile ? `Hi ${userProfile.displayName}` : (document.getElementById('welcome-text')?.innerText || "Hi there");
     const greeting = document.getElementById('dynamic-greeting')?.innerText || "Welcome back";
     const rawStatus = document.getElementById('local-time')?.innerText || "";
     const cleanStatus = rawStatus.split('||')[1]?.trim() || "stay in your zone";
-
     const introVariants = ["Quick update,", "Here’s where we are,", "Right now,"];
     const intro = introVariants[Math.floor(Math.random() * introVariants.length)];
-
     const fullMessage = `${welcome}. ${greeting}... ${intro} it’s ${dayName}, ${dateStr},. The time is ${timeForVoice}.. Just so you know, ${cleanStatus}.`;
     const cleanText = fullMessage.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
 
@@ -297,18 +293,13 @@ async function announceVibe() {
             method: 'POST',
             body: JSON.stringify({ text: cleanText })
         });
-        
         if (!response.ok) throw new Error(`API Bridge failed with status ${response.status}`);
-        
         const audioBlob = await response.blob();
-        
         // --- ROBUST AUDIO PLAYBACK LOGIC ---
         // 1. Get a URL for the Blob
         const audioUrl = URL.createObjectURL(audioBlob);
-        
         // 2. Create an <audio> element
         const audioElement = new Audio();
-        
         // 3. Create a promise to handle the playing state, which solves many autoplay and loading issues
         const playPromise = new Promise((resolve, reject) => {
             // Set up one-time 'canplaythrough' event listener to be sure the audio is ready
@@ -317,28 +308,31 @@ async function announceVibe() {
                     .then(resolve)
                     .catch(reject);
             }, { once: true });
-            
             // Handle any errors during loading or playback
             audioElement.addEventListener('error', (e) => {
                 console.error("Audio element error:", e);
                 reject(new Error(`Audio error: ${audioElement.error?.message || 'Unknown error'}`));
             }, { once: true });
-            
             // Set the source and load
             audioElement.src = audioUrl;
             audioElement.load(); // Explicitly start loading the audio
         });
-        
         await playPromise;
-        
         // Clean up the blob URL after playback finishes or fails
         audioElement.onended = () => URL.revokeObjectURL(audioUrl);
         audioElement.onerror = () => URL.revokeObjectURL(audioUrl);
-        
-   } catch (error) {
-        console.error("Announcer failed to kick, mate:", error);
-        // Fallback removed. We only want the high-quality Edge vibe.
+
+    } catch (error) {
+        console.error("Primary audio API failed, falling back to browser speech:", error);
+        // --- Your existing native speech fallback ---
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        const voices = window.speechSynthesis.getVoices();
+        const fallbackVoice = voices.find(v => v.name.toLowerCase().includes("male") && v.lang.startsWith("en"));
+        if (fallbackVoice) utterance.voice = fallbackVoice;
+        utterance.rate = 1.0;
+        window.speechSynthesis.speak(utterance);
     }
+
 }
 
 function startVibeParade() {
