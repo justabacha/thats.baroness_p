@@ -260,14 +260,14 @@ async function updateWeatherLogic(lat, lon, forcedCity = null) {
         document.getElementById('local-time').innerText = `${timeStr} HRS || ${dailySuggestion}`;
         document.getElementById('condition').innerText = "Temperature";
         
-        //setTimeout(() => { announceVibe(); }, 1500);
+        setTimeout(() => { announceVibe(); }, 1500);
     } catch (err) {
         console.error("Logic Error:", err);
         dailySuggestion = "Vibing Locally";
     }
 }
 
-/*async function announceVibe() {
+async function announceVibe() {
     const now = new Date();
     const dayName = now.toLocaleDateString('en-GB', { weekday: 'long' });
     const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
@@ -335,17 +335,11 @@ async function updateWeatherLogic(lat, lon, forcedCity = null) {
         audioElement.onended = () => URL.revokeObjectURL(audioUrl);
         audioElement.onerror = () => URL.revokeObjectURL(audioUrl);
         
-    } catch (error) {
-        console.error("Primary audio API failed, falling back to browser speech:", error);
-        // --- Your existing native speech fallback ---
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        const voices = window.speechSynthesis.getVoices();
-        const fallbackVoice = voices.find(v => v.name.toLowerCase().includes("male") && v.lang.startsWith("en"));
-        if (fallbackVoice) utterance.voice = fallbackVoice;
-        utterance.rate = 1.0;
-        window.speechSynthesis.speak(utterance);
+   } catch (error) {
+        console.error("Announcer failed to kick, mate:", error);
+        // Fallback removed. We only want the high-quality Edge vibe.
     }
-}*/
+}
 
 function startVibeParade() {
     let origin = document.querySelector('.parade-origin');
@@ -448,21 +442,4 @@ function downloadCard(cardId, fileName) {
     }).catch(err => {
         console.error("HD Capture failed:", err);
     });
-}
-
-export default function VoiceTest() {
-  const playCloudVoice = () => {
-    // This calls your real Vercel URL
-    const audio = new Audio(`/api/announcer?text=${encodeURIComponent("Yoow Baroness, I'm live from the cloud!")}`);
-    audio.play().catch(e => console.error("Still blocked?", e));
-  };
-
-  return (
-    <div style={{ padding: '50px', background: '#111', color: 'white' }}>
-      <h1>Cloud Announcer Test ☁️</h1>
-      <button onClick={playCloudVoice} style={{ padding: '20px', cursor: 'pointer' }}>
-        📢 Trigger Cloud Voice
-      </button>
-    </div>
-  );
 }
