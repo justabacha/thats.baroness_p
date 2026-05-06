@@ -1,5 +1,5 @@
 // api/speak.js
-export default async function handler(req, res) {
+/*export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -28,8 +28,8 @@ export default async function handler(req, res) {
         },
        body: JSON.stringify({
   text: text,
-  voiceId: "en-US-marcus",      // ✅ Corrected full voice ID
-  modelVersion: "GEN2",          // ✅ Using the high-quality GEN2 model
+  voiceId: "en-US-marcus",     
+  modelVersion: "GEN2",        
   style: 'conversational',
   rate: 0,
   pitch: 0,
@@ -81,4 +81,4 @@ export default async function handler(req, res) {
     console.error('Edge TTS failed:', err.message);
     return res.status(500).json({ error: 'All TTS engines failed, mate' });
   }
-}
+}*/
