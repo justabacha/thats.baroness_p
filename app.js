@@ -267,9 +267,8 @@ async function updateWeatherLogic(lat, lon, forcedCity = null) {
     }
 }
 
-
 async function announceVibe() {
-    // --- 1. Build the message (exactly the same as before) ---
+    // ---- Build the message (exactly as before) ----
     const now = new Date();
     const dayName = now.toLocaleDateString('en-GB', { weekday: 'long' });
     const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
@@ -290,43 +289,21 @@ async function announceVibe() {
     const fullMessage = `${welcome}. ${greeting}... ${intro} it’s ${dayName}, ${dateStr},. The time is ${timeForVoice}.. Just so you know, ${cleanStatus}.`;
     const cleanText = fullMessage.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
 
-    // --- 2. NEW: Use Kokoro (client‑side) ---
-    try {
-        // Import the functions dynamically (or import at top of file)
-        const { loadKokoroModel, speakWithKokoro } = await import('./kokoro-tts.js');
-        
-        // Show some visual feedback (optional)
-        const statusDiv = document.getElementById('status-message'); // adjust to your UI
-        if (statusDiv) statusDiv.innerText = "Loading voice engine...";
-        
-        // Load model if not already loaded (first time only)
-        await loadKokoroModel((progress) => {
-            const percent = Math.round(progress.progress * 100);
-            console.log(`Kokoro download: ${percent}%`);
-            if (statusDiv) statusDiv.innerText = `Loading voice: ${percent}%`;
-        });
-        
-        if (statusDiv) statusDiv.innerText = "Speaking...";
-        await speakWithKokoro(cleanText);
-        if (statusDiv) statusDiv.innerText = "";
-        
-        console.log("Kokoro finished successfully");
-        return; // Exit – we have spoken
-    } catch (kokoroError) {
-        console.error("Kokoro failed:", kokoroError);
-        // Here you could optionally fall back to your old API, but for now we just log
-        alert("Kokoro TTS failed – check console");
+    // ---- ONLY Kokoro, no fallback ----
+    if (!window.kokoroSpeak) {
+        console.error("Kokoro module not loaded. Make sure <script type='module' src='/kokoro-tts-module.js'></script> is in your HTML.");
+        return;
     }
 
-    // --- 3. OLD CODE is commented out (keep it for later) ---
-    /*
     try {
-        const response = await fetch('/api/speak', ...);
-        ...
-    } catch (error) {
-        ...
+        console.log("Announce: using Kokoro TTS");
+        await window.kokoroSpeak(cleanText, (progress) => {
+            console.log(`Kokoro load progress: ${Math.round(progress.progress * 100)}%`);
+        });
+        console.log("Kokoro speech finished");
+    } catch (err) {
+        console.error("Kokoro speech failed:", err);
     }
-    */
 }
 
 function startVibeParade() {
