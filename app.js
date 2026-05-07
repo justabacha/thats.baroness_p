@@ -267,7 +267,9 @@ async function updateWeatherLogic(lat, lon, forcedCity = null) {
     }
 }
 
+
 async function announceVibe() {
+    // --- 1. Build the message (exactly the same as before) ---
     const now = new Date();
     const dayName = now.toLocaleDateString('en-GB', { weekday: 'long' });
     const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
@@ -288,51 +290,43 @@ async function announceVibe() {
     const fullMessage = `${welcome}. ${greeting}... ${intro} it’s ${dayName}, ${dateStr},. The time is ${timeForVoice}.. Just so you know, ${cleanStatus}.`;
     const cleanText = fullMessage.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
 
+    // --- 2. NEW: Use Kokoro (client‑side) ---
     try {
-        const response = await fetch('/api/speak', {
-            method: 'POST',
-            body: JSON.stringify({ text: cleanText })
+        // Import the functions dynamically (or import at top of file)
+        const { loadKokoroModel, speakWithKokoro } = await import('./kokoro-tts.js');
+        
+        // Show some visual feedback (optional)
+        const statusDiv = document.getElementById('status-message'); // adjust to your UI
+        if (statusDiv) statusDiv.innerText = "Loading voice engine...";
+        
+        // Load model if not already loaded (first time only)
+        await loadKokoroModel((progress) => {
+            const percent = Math.round(progress.progress * 100);
+            console.log(`Kokoro download: ${percent}%`);
+            if (statusDiv) statusDiv.innerText = `Loading voice: ${percent}%`;
         });
-        if (!response.ok) throw new Error(`API Bridge failed with status ${response.status}`);
-        const audioBlob = await response.blob();
-        // --- ROBUST AUDIO PLAYBACK LOGIC ---
-        // 1. Get a URL for the Blob
-        const audioUrl = URL.createObjectURL(audioBlob);
-        // 2. Create an <audio> element
-        const audioElement = new Audio();
-        // 3. Create a promise to handle the playing state, which solves many autoplay and loading issues
-        const playPromise = new Promise((resolve, reject) => {
-            // Set up one-time 'canplaythrough' event listener to be sure the audio is ready
-            audioElement.addEventListener('canplaythrough', () => {
-                audioElement.play()
-                    .then(resolve)
-                    .catch(reject);
-            }, { once: true });
-            // Handle any errors during loading or playback
-            audioElement.addEventListener('error', (e) => {
-                console.error("Audio element error:", e);
-                reject(new Error(`Audio error: ${audioElement.error?.message || 'Unknown error'}`));
-            }, { once: true });
-            // Set the source and load
-            audioElement.src = audioUrl;
-            audioElement.load(); // Explicitly start loading the audio
-        });
-        await playPromise;
-        // Clean up the blob URL after playback finishes or fails
-        audioElement.onended = () => URL.revokeObjectURL(audioUrl);
-        audioElement.onerror = () => URL.revokeObjectURL(audioUrl);
-
-    } catch (error) {
-        console.error("Primary audio API failed, falling back to browser speech:", error);
-        // --- Your existing native speech fallback ---
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        const voices = window.speechSynthesis.getVoices();
-        const fallbackVoice = voices.find(v => v.name.toLowerCase().includes("male") && v.lang.startsWith("en"));
-        if (fallbackVoice) utterance.voice = fallbackVoice;
-        utterance.rate = 1.0;
-        window.speechSynthesis.speak(utterance);
+        
+        if (statusDiv) statusDiv.innerText = "Speaking...";
+        await speakWithKokoro(cleanText);
+        if (statusDiv) statusDiv.innerText = "";
+        
+        console.log("Kokoro finished successfully");
+        return; // Exit – we have spoken
+    } catch (kokoroError) {
+        console.error("Kokoro failed:", kokoroError);
+        // Here you could optionally fall back to your old API, but for now we just log
+        alert("Kokoro TTS failed – check console");
     }
 
+    // --- 3. OLD CODE is commented out (keep it for later) ---
+    /*
+    try {
+        const response = await fetch('/api/speak', ...);
+        ...
+    } catch (error) {
+        ...
+    }
+    */
 }
 
 function startVibeParade() {

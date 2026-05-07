@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@echristian/edge-tts": "^0.0.14",
+    "kokoro-js": "^1.2.1",
     "msedge-tts": "^2.0.5"
   }
 }
