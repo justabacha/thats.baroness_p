@@ -4,12 +4,12 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Parse body safely
+  // Parse body safely for JSON or raw string
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
   const {
     text,
     provider = 'deepgram',
-    voice = 'aura-alexis-en'
+    voice = 'aura-asteria-en'
   } = body;
 
   if (!text) {
@@ -22,8 +22,8 @@ module.exports = async function handler(req, res) {
   // ---------- 1. PRIMARY: Deepgram Aura TTS ----------
   if (provider === 'deepgram' && deepgramKey) {
     try {
-      // Ensure we use a valid Aura model name
-      const dgVoice = voice.startsWith('aura-') ? voice : "aura-alexis-en";
+      // Direct use of aura-asteria-en as the validated default
+      const dgVoice = voice.startsWith('aura-') ? voice : "aura-asteria-en";
 
       const dgResponse = await fetch(`https://api.deepgram.com/v1/speak?model=${dgVoice}`, {
         method: 'POST',
