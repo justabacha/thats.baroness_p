@@ -21,9 +21,10 @@ export default async function handler(req, res) {
   const murfKey = process.env.MURF_API_KEY;
 
   // ---------- 1. PRIMARY: Gemini TTS API ----------
+  // FIXED: Using the experimental 2.0-flash-exp model which officially supports the AUDIO modality in v1beta
   if (provider === 'gemini' && geminiKey) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiKey}`;
 
       const geminiResponse = await fetch(url, {
         method: 'POST',
@@ -43,18 +44,20 @@ export default async function handler(req, res) {
         })
       });
 
+      const responseData = await geminiResponse.json();
+
       if (geminiResponse.ok) {
-        const data = await geminiResponse.json();
-        const base64Audio = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+        const base64Audio = responseData.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
 
         if (base64Audio) {
           const audioBuffer = Buffer.from(base64Audio, 'base64');
           res.setHeader('Content-Type', 'audio/wav');
           return res.send(audioBuffer);
+        } else {
+          console.error('Gemini 2.0 success but no audio data returned in parts.');
         }
       } else {
-        const errText = await geminiResponse.text();
-        console.error(`Gemini TTS Error (${geminiResponse.status}):`, errText);
+        console.error(`Gemini TTS Error (${geminiResponse.status}):`, JSON.stringify(responseData));
       }
     } catch (err) {
       console.error('Gemini TTS Exception:', err.message);
