@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
   const {
     text,
-    provider = 'gemini',             // Options: 'gemini', 'deepgram', 'murf'
+    provider = 'gemini',             // Options: 'gemini', 'murf'
     voice = 'Kore',                  // Gemini voices: Kore, Puck, Fenrir, Aoede, Leda
     directorNote = 'Speak in a clear, natural, and expressive tone.'
   } = body;
@@ -18,11 +18,9 @@ export default async function handler(req, res) {
   }
 
   const geminiKey = process.env.GEMINI_API_KEY;
-  const openRouterKey = process.env.OPENROUTER_API_KEY;
   const murfKey = process.env.MURF_API_KEY;
 
   // ---------- 1. PRIMARY: Gemini TTS API ----------
-  // Using gemini-1.5-flash as it is more stable for general availability
   if (provider === 'gemini' && geminiKey) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
@@ -53,8 +51,6 @@ export default async function handler(req, res) {
           const audioBuffer = Buffer.from(base64Audio, 'base64');
           res.setHeader('Content-Type', 'audio/wav');
           return res.send(audioBuffer);
-        } else {
-          console.error('Gemini success but no audio data returned.');
         }
       } else {
         const errText = await geminiResponse.text();
@@ -65,45 +61,9 @@ export default async function handler(req, res) {
     }
   }
 
-  // ---------- 2. SECONDARY: OpenRouter Deepgram Flux TTS (FREE) ----------
-  if (openRouterKey) {
-    try {
-      // Use the provided voice if it looks like a flux voice, otherwise default to alexis
-      const fluxVoice = voice.includes('flux') ? voice : 'flux-alexis-en';
-
-      const response = await fetch('https://openrouter.ai/api/v1/audio/speech', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openRouterKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://thats-baroness-p.vercel.app',
-          'X-Title': 'AVIS System'
-        },
-        body: JSON.stringify({
-          model: 'deepgram/flux-tts:free',
-          input: text,
-          voice: fluxVoice,
-          response_format: 'mp3'
-        })
-      });
-
-      if (response.ok) {
-        const audioBuffer = await response.arrayBuffer();
-        res.setHeader('Content-Type', 'audio/mpeg');
-        return res.send(Buffer.from(audioBuffer));
-      } else {
-        const errText = await response.text();
-        console.error(`OpenRouter TTS error (${response.status}):`, errText);
-      }
-    } catch (err) {
-      console.error('OpenRouter TTS exception:', err.message);
-    }
-  }
-
-  // ---------- 3. TERTIARY FALLBACK: Murf AI ----------
+  // ---------- 2. SECONDARY: Murf AI ----------
   if (murfKey) {
     try {
-      // Ensure we use the correct voiceId format for Murf
       const murfVoice = voice.includes('en-US') ? voice : "en-US-marcus";
 
       const murfResponse = await fetch('https://api.murf.ai/v1/speech/generate', {
@@ -140,7 +100,7 @@ export default async function handler(req, res) {
     }
   }
 
-  // ---------- 4. FINAL FALLBACK: Edge TTS ----------
+  // ---------- 3. FINAL FALLBACK: Edge TTS ----------
   try {
     const { synthesize: edgeTTS } = await import('@echristian/edge-tts');
     const edgeResult = await edgeTTS({
