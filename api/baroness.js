@@ -22,9 +22,10 @@ export default async function handler(req, res) {
   const murfKey = process.env.MURF_API_KEY;
 
   // ---------- 1. PRIMARY: Gemini TTS API ----------
+  // Using gemini-1.5-flash as it is more stable for general availability
   if (provider === 'gemini' && geminiKey) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-tts-preview:generateContent?key=${geminiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
 
       const geminiResponse = await fetch(url, {
         method: 'POST',
@@ -52,6 +53,8 @@ export default async function handler(req, res) {
           const audioBuffer = Buffer.from(base64Audio, 'base64');
           res.setHeader('Content-Type', 'audio/wav');
           return res.send(audioBuffer);
+        } else {
+          console.error('Gemini success but no audio data returned.');
         }
       } else {
         const errText = await geminiResponse.text();
@@ -65,6 +68,9 @@ export default async function handler(req, res) {
   // ---------- 2. SECONDARY: OpenRouter Deepgram Flux TTS (FREE) ----------
   if (openRouterKey) {
     try {
+      // Use the provided voice if it looks like a flux voice, otherwise default to alexis
+      const fluxVoice = voice.includes('flux') ? voice : 'flux-alexis-en';
+
       const response = await fetch('https://openrouter.ai/api/v1/audio/speech', {
         method: 'POST',
         headers: {
@@ -76,7 +82,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           model: 'deepgram/flux-tts:free',
           input: text,
-          voice: 'flux-alexis-en',
+          voice: fluxVoice,
           response_format: 'mp3'
         })
       });
@@ -97,6 +103,9 @@ export default async function handler(req, res) {
   // ---------- 3. TERTIARY FALLBACK: Murf AI ----------
   if (murfKey) {
     try {
+      // Ensure we use the correct voiceId format for Murf
+      const murfVoice = voice.includes('en-US') ? voice : "en-US-marcus";
+
       const murfResponse = await fetch('https://api.murf.ai/v1/speech/generate', {
         method: 'POST',
         headers: {
@@ -105,7 +114,7 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           text: text,
-          voiceId: "en-US-marcus",
+          voiceId: murfVoice,
           modelVersion: "GEN2",
           style: 'conversational',
           rate: 0,
