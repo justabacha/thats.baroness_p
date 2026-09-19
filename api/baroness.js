@@ -4,13 +4,12 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Parse body safely for JSON or raw string
+  // Parse body safely
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
   const {
     text,
-    provider = 'deepgram',           // Options: 'deepgram', 'murf'
-    voice = 'aura-alexis-en',         // Default voice ID based on provider
-    directorNote = ''                 // Not used for Deepgram/Murf but kept for compatibility
+    provider = 'deepgram',
+    voice = 'aura-alexis-en'
   } = body;
 
   if (!text) {
@@ -20,13 +19,13 @@ module.exports = async function handler(req, res) {
   const deepgramKey = process.env.DEEPGRAM_API_KEY;
   const murfKey = process.env.MURF_API_KEY;
 
-  // ---------- 1. PRIMARY: Deepgram Aura TTS (Direct API) ----------
-  // Fast, high quality, and uses the $200 free credit.
+  // ---------- 1. PRIMARY: Deepgram Aura TTS ----------
   if (provider === 'deepgram' && deepgramKey) {
     try {
-      const deepgramVoice = voice.includes('aura') ? voice : "aura-alexis-en";
+      // Ensure we use a valid Aura model name
+      const dgVoice = voice.startsWith('aura-') ? voice : "aura-alexis-en";
 
-      const dgResponse = await fetch(`https://api.deepgram.com/v1/speak?model=${deepgramVoice}`, {
+      const dgResponse = await fetch(`https://api.deepgram.com/v1/speak?model=${dgVoice}`, {
         method: 'POST',
         headers: {
           'Authorization': `Token ${deepgramKey}`,
@@ -40,8 +39,8 @@ module.exports = async function handler(req, res) {
         res.setHeader('Content-Type', 'audio/mpeg');
         return res.send(Buffer.from(audioBuffer));
       } else {
-        const errorText = await dgResponse.text();
-        console.error(`Deepgram Error (${dgResponse.status}):`, errorText);
+        const errorData = await dgResponse.json();
+        console.error(`Deepgram Error (${dgResponse.status}):`, JSON.stringify(errorData));
       }
     } catch (err) {
       console.error('Deepgram Exception:', err.message);
