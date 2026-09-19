@@ -8,58 +8,43 @@ module.exports = async function handler(req, res) {
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
   const {
     text,
-    provider = 'gemini',             // Options: 'gemini', 'murf'
-    voice = 'Kore',                  // Gemini voices: Kore, Puck, Fenrir, Aoede, Leda
-    directorNote = 'Speak in a clear, natural, and expressive tone.'
+    provider = 'deepgram',           // Options: 'deepgram', 'murf'
+    voice = 'aura-alexis-en',         // Default voice ID based on provider
+    directorNote = ''                 // Not used for Deepgram/Murf but kept for compatibility
   } = body;
 
   if (!text) {
     return res.status(400).json({ error: 'Missing text field' });
   }
 
-  const geminiKey = process.env.GEMINI_API_KEY;
+  const deepgramKey = process.env.DEEPGRAM_API_KEY;
   const murfKey = process.env.MURF_API_KEY;
 
-  // ---------- 1. PRIMARY: Gemini TTS API ----------
-  if (provider === 'gemini' && geminiKey) {
+  // ---------- 1. PRIMARY: Deepgram Aura TTS (Direct API) ----------
+  // Fast, high quality, and uses the $200 free credit.
+  if (provider === 'deepgram' && deepgramKey) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-002:generateContent?key=${geminiKey}`;
+      const deepgramVoice = voice.includes('aura') ? voice : "aura-alexis-en";
 
-      const geminiResponse = await fetch(url, {
+      const dgResponse = await fetch(`https://api.deepgram.com/v1/speak?model=${deepgramVoice}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: `${directorNote}\n\n${text}` }]
-          }],
-          generationConfig: {
-            responseModalities: ['AUDIO'],
-            speechConfig: {
-              voiceConfig: {
-                prebuiltVoiceConfig: { voiceName: voice }
-              }
-            }
-          }
-        })
+        headers: {
+          'Authorization': `Token ${deepgramKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ text: text })
       });
 
-      const responseData = await geminiResponse.json();
-
-      if (geminiResponse.ok) {
-        const base64Audio = responseData.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-
-        if (base64Audio) {
-          const audioBuffer = Buffer.from(base64Audio, 'base64');
-          res.setHeader('Content-Type', 'audio/wav');
-          return res.send(audioBuffer);
-        } else {
-          console.error('Gemini success but no audio data returned.');
-        }
+      if (dgResponse.ok) {
+        const audioBuffer = await dgResponse.arrayBuffer();
+        res.setHeader('Content-Type', 'audio/mpeg');
+        return res.send(Buffer.from(audioBuffer));
       } else {
-        console.error(`Gemini TTS Error (${geminiResponse.status}):`, JSON.stringify(responseData));
+        const errorText = await dgResponse.text();
+        console.error(`Deepgram Error (${dgResponse.status}):`, errorText);
       }
     } catch (err) {
-      console.error('Gemini TTS Exception:', err.message);
+      console.error('Deepgram Exception:', err.message);
     }
   }
 
