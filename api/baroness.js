@@ -10,6 +10,9 @@ module.exports = async function handler(req, res) {
     text,
     provider = 'deepgram',
     voice = 'aura-asteria-en'
+    voice = 'aura-asteria-en',
+    murfRate = 0,
+    murfPitch = 0
   } = body;
 
   if (!text) {
@@ -65,6 +68,8 @@ module.exports = async function handler(req, res) {
           style: 'conversational',
           rate: 0,
           pitch: 0,
+          rate: murfRate,
+          pitch: murfPitch,
           format: 'MP3',
           channelType: 'MONO',
           encodeAsBase64: false,
@@ -106,3 +111,4 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'All TTS engines failed, mate' });
   }
 }
+
