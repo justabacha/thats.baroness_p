@@ -10,10 +10,12 @@ module.exports = async function handler(req, res) {
     text,
     provider = 'deepgram',
     voice = 'aura-asteria-en'
-    voice = 'aura-asteria-en',
-    murfRate = 0,
-    murfPitch = 0
   } = body;
+  const text = body.text;
+  const provider = body.provider === undefined ? 'deepgram' : body.provider;
+  const voice = body.voice === undefined ? 'aura-asteria-en' : body.voice;
+  const murfRate = body.murfRate === undefined ? 0 : body.murfRate;
+  const murfPitch = body.murfPitch === undefined ? 0 : body.murfPitch;
 
   if (!text) {
     return res.status(400).json({ error: 'Missing text field' });
